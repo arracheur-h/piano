@@ -3,190 +3,416 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Piano RGB</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<title>Virtual Piano</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-:root { --bg: #050508; }
-
-html, body {
-  width: 100%; height: 100%;
-  background: var(--bg);
-  font-family: 'Share Tech Mono', monospace;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+:root{
+  --bg:#06060c;
+  --panel:#0e0e1a;
+  --border:rgba(255,255,255,0.07);
+  --accent:#c084fc;
+  --glow:rgba(192,132,252,0.15);
 }
 
-#bgGlow {
-  position: fixed; inset: 0;
-  pointer-events: none; z-index: 0;
-  background: none;
-  transition: background 0.12s;
+html,body{
+  width:100%;height:100%;min-height:100vh;
+  background:var(--bg);
+  font-family:'Share Tech Mono',monospace;
+  overflow-x:hidden;
+  display:flex;flex-direction:column;align-items:center;
+  gap:0;
 }
 
-.topbar {
-  position: relative; z-index: 10;
-  display: flex; align-items: center; gap: 28px;
-  margin-bottom: 14px;
+/* ── BG Glow ── */
+#bgGlow{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  transition:background 0.15s;
 }
 
-h1 {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 900; font-size: 1.5rem;
-  letter-spacing: 0.3em; text-transform: uppercase;
-  color: #fff; transition: color 0.08s, text-shadow 0.08s;
+/* ── Header ── */
+.header{
+  position:relative;z-index:10;
+  width:100%;max-width:1100px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px 0;
 }
 
-.note-display {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.2rem; font-weight: 700;
-  letter-spacing: 0.15em; min-width: 70px; text-align: center;
-  color: rgba(255,255,255,0.3);
-  transition: color 0.05s, text-shadow 0.05s;
+h1{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.3rem;
+  letter-spacing:0.35em;text-transform:uppercase;
+  color:#fff;text-shadow:0 0 20px rgba(192,132,252,0.5);
+  transition:color 0.1s,text-shadow 0.1s;
 }
 
-#viz {
-  position: relative; z-index: 10;
-  display: block; margin-bottom: 12px;
-  border-radius: 6px;
+.note-disp{
+  font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:700;
+  letter-spacing:0.1em;min-width:60px;text-align:center;
+  color:rgba(255,255,255,0.2);
+  transition:color 0.05s,text-shadow 0.05s;
 }
 
-.piano-wrap {
-  position: relative; z-index: 10;
-  background: linear-gradient(180deg, #111118 0%, #090910 100%);
-  border-radius: 14px 14px 22px 22px;
-  border: 1px solid rgba(255,255,255,0.06);
-  padding: 16px 22px 28px;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.9);
-  overflow-x: auto; max-width: 98vw;
+/* ── Visualizer ── */
+#viz{
+  position:relative;z-index:10;
+  display:block;margin:10px auto 8px;
+  border-radius:4px;
 }
 
-.rgb-strip {
-  height: 3px; border-radius: 2px; margin-bottom: 14px;
-  background: linear-gradient(90deg,#f00,#ff7700,#ff0,#0f0,#0ff,#07f,#f0f,#f00);
-  background-size: 200% 100%;
-  animation: rainbow 3s linear infinite;
-}
-@keyframes rainbow { to { background-position: 200% 0; } }
-
-.keys {
-  position: relative;
-  height: 180px;
-  flex-shrink: 0;
+/* ── Piano wrap ── */
+.piano-wrap{
+  position:relative;z-index:10;
+  background:linear-gradient(180deg,#121220 0%,#0a0a14 100%);
+  border-radius:12px 12px 20px 20px;
+  border:1px solid var(--border);
+  padding:14px 20px 24px;
+  box-shadow:0 40px 100px rgba(0,0,0,0.9);
+  overflow-x:auto;max-width:99vw;
 }
 
-.key-white {
-  width: 36px; height: 180px;
-  background: linear-gradient(180deg, #f0ece2 0%, #ddd7cc 100%);
-  border-radius: 0 0 7px 7px;
-  border: 1px solid #b0a898; border-top: none;
-  cursor: pointer; position: absolute;
-  box-shadow: 0 5px 0 #9a9080, 0 7px 14px rgba(0,0,0,0.45), inset 0 -2px 4px rgba(0,0,0,0.05);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: flex-end;
-  padding-bottom: 9px; user-select: none;
-  transition: background 0.04s, box-shadow 0.04s, transform 0.04s;
+.rgb-strip{
+  height:3px;border-radius:2px;margin-bottom:12px;
+  background:linear-gradient(90deg,#f00,#f70,#ff0,#0f0,#0ff,#07f,#f0f,#f00);
+  background-size:200% 100%;animation:rain 3s linear infinite;
 }
-.key-white:hover { background: linear-gradient(180deg, #fffdf7 0%, #eee8db 100%); }
-.key-white.active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 #6a6050, 0 3px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(0,0,0,0.12);
+@keyframes rain{to{background-position:200% 0}}
+
+.keys{position:relative;height:180px;flex-shrink:0;}
+
+/* White keys */
+.kw{
+  width:40px;height:180px;
+  background:linear-gradient(180deg,#f2ede3 0%,#ddd7cb 100%);
+  border-radius:0 0 8px 8px;
+  border:1px solid #b0a898;border-top:none;
+  cursor:pointer;position:absolute;
+  box-shadow:0 5px 0 #9a9080,0 7px 12px rgba(0,0,0,0.4),inset 0 -2px 4px rgba(0,0,0,0.05);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:10px;user-select:none;
+  transition:background 0.04s,box-shadow 0.04s,transform 0.04s;
+  z-index:1;
+}
+.kw:hover{background:linear-gradient(180deg,#fffef8 0%,#eee8db 100%);}
+.kw.active{
+  transform:translateY(4px);
+  box-shadow:0 1px 0 #6a6050,0 3px 8px rgba(0,0,0,0.5),inset 0 2px 6px rgba(0,0,0,0.12);
 }
 
-.key-black {
-  width: 24px; height: 110px;
-  background: linear-gradient(180deg, #1c1c1c 0%, #080808 70%, #111 100%);
-  border-radius: 0 0 5px 5px;
-  position: absolute; top: 0; z-index: 2; cursor: pointer;
-  box-shadow: 0 6px 0 #000, 0 8px 14px rgba(0,0,0,0.9), inset 0 -1px 3px rgba(255,255,255,0.04);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: flex-end;
-  padding-bottom: 7px; user-select: none;
-  transition: background 0.04s, box-shadow 0.04s, transform 0.04s;
+/* Black keys */
+.kb{
+  width:27px;height:112px;
+  background:linear-gradient(180deg,#1c1c1c 0%,#080808 70%,#111 100%);
+  border-radius:0 0 5px 5px;
+  position:absolute;top:0;z-index:2;cursor:pointer;
+  box-shadow:0 6px 0 #000,0 8px 14px rgba(0,0,0,0.9),inset 0 -1px 3px rgba(255,255,255,0.04);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:7px;user-select:none;
+  transition:background 0.04s,box-shadow 0.04s,transform 0.04s;
 }
-.key-black:hover { background: linear-gradient(180deg, #2e2e2e 0%, #141414 70%, #1a1a1a 100%); }
-.key-black.active {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 #000, 0 4px 8px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.key-note {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.42rem; margin-bottom: 3px; opacity: 0.45;
-}
-.key-kbd { font-size: 0.48rem; letter-spacing: 0.02em; text-transform: uppercase; }
-.key-white .key-note { color: rgba(0,0,0,0.4); }
-.key-white .key-kbd  { color: rgba(0,0,0,0.3); }
-.key-black .key-note { color: rgba(255,255,255,0.3); }
-.key-black .key-kbd  { color: rgba(255,255,255,0.25); }
-
-.octave-strip {
-  display: flex; justify-content: center; gap: 5px; margin-top: 12px;
-}
-.octave-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.15);
-  cursor: pointer; transition: all 0.2s;
-}
-.octave-dot.active { background: #fff; box-shadow: 0 0 10px #fff; }
-
-.controls {
-  position: relative; z-index: 10;
-  display: flex; gap: 16px; margin-top: 12px;
-  color: rgba(255,255,255,0.22); font-size: 0.58rem;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  flex-wrap: wrap; justify-content: center;
-}
-.k {
-  display: inline-block;
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 3px; padding: 1px 5px;
-  color: rgba(255,255,255,0.35); font-size: 0.62rem; margin: 0 1px;
+.kb:hover{background:linear-gradient(180deg,#2e2e2e 0%,#141414 70%);}
+.kb.active{
+  transform:translateY(3px);
+  box-shadow:0 3px 0 #000,0 4px 8px rgba(0,0,0,0.8),inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
-/* Particles */
-.particle {
-  position: fixed; border-radius: 50%; pointer-events: none; z-index: 20;
-  animation: pfly 0.7s ease-out forwards;
+.key-note{font-family:'Orbitron',sans-serif;font-size:0.4rem;margin-bottom:2px;opacity:0.4;}
+.key-kbd{font-size:0.5rem;letter-spacing:0.02em;text-transform:uppercase;}
+.kw .key-note{color:rgba(0,0,0,0.5);}
+.kw .key-kbd{color:rgba(0,0,0,0.3);}
+.kb .key-note{color:rgba(255,255,255,0.3);}
+.kb .key-kbd{color:rgba(255,255,255,0.2);}
+
+/* ── Controls bar ── */
+.controls-bar{
+  position:relative;z-index:10;
+  width:100%;max-width:1100px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 24px 0;
 }
-@keyframes pfly {
-  0%   { opacity: 1; transform: scale(1) translate(0,0); }
-  100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)); }
+
+.btn{
+  font-family:'Orbitron',sans-serif;font-size:0.65rem;font-weight:700;
+  letter-spacing:0.15em;text-transform:uppercase;
+  padding:7px 16px;border-radius:6px;cursor:pointer;border:none;
+  transition:all 0.12s;user-select:none;
 }
+.btn-play{
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff;box-shadow:0 0 20px rgba(168,85,247,0.4);
+}
+.btn-play:hover{box-shadow:0 0 30px rgba(168,85,247,0.7);transform:translateY(-1px);}
+.btn-play.playing{
+  background:linear-gradient(135deg,#b91c1c,#ef4444);
+  box-shadow:0 0 20px rgba(239,68,68,0.4);
+}
+
+.btn-clear{
+  background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);
+  border:1px solid rgba(255,255,255,0.12);
+}
+.btn-clear:hover{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);}
+
+.tempo-wrap{
+  display:flex;align-items:center;gap:8px;
+  color:rgba(255,255,255,0.35);font-size:0.65rem;letter-spacing:0.1em;
+}
+.tempo-wrap input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:90px;height:4px;
+  background:rgba(255,255,255,0.15);border-radius:2px;outline:none;cursor:pointer;
+}
+.tempo-wrap input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--accent);cursor:pointer;
+  box-shadow:0 0 8px rgba(192,132,252,0.6);
+}
+#tempoVal{color:var(--accent);min-width:36px;display:inline-block;text-align:right;}
+
+.song-select{
+  background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);
+  border:1px solid rgba(255,255,255,0.12);border-radius:6px;
+  padding:6px 10px;font-family:'Share Tech Mono',monospace;font-size:0.68rem;
+  cursor:pointer;outline:none;
+}
+.song-select option{background:#111;}
+
+/* ── Sheet ── */
+.sheet-wrap{
+  position:relative;z-index:10;
+  width:100%;max-width:1100px;
+  padding:12px 24px 20px;
+}
+
+.sheet-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;
+}
+.sheet-title{
+  font-family:'Orbitron',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(255,255,255,0.3);
+}
+.sheet-hint{
+  font-size:0.58rem;color:rgba(255,255,255,0.18);letter-spacing:0.08em;
+}
+
+#sheet{
+  width:100%;min-height:80px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;
+  color:rgba(255,255,255,0.75);
+  font-family:'Share Tech Mono',monospace;font-size:0.9rem;
+  line-height:1.7;letter-spacing:0.08em;
+  padding:12px 14px;
+  resize:vertical;outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+#sheet:focus{
+  border-color:rgba(192,132,252,0.4);
+  box-shadow:0 0 0 3px rgba(192,132,252,0.08);
+}
+#sheet::placeholder{color:rgba(255,255,255,0.15);}
+
+/* progress highlight */
+.sheet-progress{
+  position:relative;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;padding:12px 14px;
+  color:rgba(255,255,255,0.75);
+  font-family:'Share Tech Mono',monospace;font-size:0.9rem;
+  line-height:1.7;letter-spacing:0.08em;
+  min-height:80px;word-break:break-all;
+  white-space:pre-wrap;
+  display:none;
+}
+.played-char{color:rgba(255,255,255,0.25);}
+.current-char{
+  background:var(--accent);color:#000;border-radius:2px;
+  padding:0 1px;
+  box-shadow:0 0 8px var(--accent);
+}
+.unplayed-char{color:rgba(255,255,255,0.75);}
+
+/* ── Particles ── */
+.particle{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:20;
+  animation:pfx 0.7s ease-out forwards;
+}
+@keyframes pfx{
+  0%{opacity:1;transform:scale(1) translate(0,0);}
+  100%{opacity:0;transform:scale(0) translate(var(--dx),var(--dy));}
+}
+
+/* ── Keyboard hint ── */
+.kbd-hint{
+  position:relative;z-index:10;
+  display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+  padding:6px 24px 0;max-width:1100px;
+}
+.kh-group{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.kh-key{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  border-radius:4px;padding:2px 5px;
+  font-size:0.55rem;color:rgba(255,255,255,0.35);letter-spacing:0.05em;
+  min-width:22px;text-align:center;
+}
+.kh-note{font-size:0.48rem;color:rgba(255,255,255,0.2);letter-spacing:0.03em;}
 </style>
 </head>
 <body>
 <div id="bgGlow"></div>
 
-<div class="topbar">
-  <h1 id="title">Piano</h1>
-  <div class="note-display" id="noteDisp">—</div>
+<!-- Header -->
+<div class="header">
+  <h1 id="title">Virtual Piano</h1>
+  <div class="note-disp" id="noteDisp">—</div>
 </div>
 
-<canvas id="viz" width="680" height="42"></canvas>
+<!-- Visualizer -->
+<canvas id="viz" width="800" height="40"></canvas>
 
+<!-- Piano -->
 <div class="piano-wrap">
   <div class="rgb-strip"></div>
   <div class="keys" id="keys"></div>
-  <div class="octave-strip" id="dots"></div>
 </div>
 
-<div class="controls">
-  <span>Toutes les touches du clavier</span>
-  <span><span class="k">↑</span><span class="k">↓</span> octave</span>
-  <span><span class="k">0</span>–<span class="k">8</span> octave direct</span>
+<!-- Controls -->
+<div class="controls-bar">
+  <button class="btn btn-play" id="btnPlay">▶ Auto Play</button>
+  <button class="btn btn-clear" id="btnClear">✕ Vider</button>
+  <select class="song-select" id="songSelect">
+    <option value="">── Choisir une chanson ──</option>
+    <option value="megalovania">Megalovania (Undertale)</option>
+    <option value="riverflows">River Flows in You</option>
+    <option value="rushb">Rush B (meme)</option>
+    <option value="happybday">Joyeux Anniversaire</option>
+    <option value="twinkle">Twinkle Twinkle</option>
+    <option value="nokia">Nokia Tune</option>
+  </select>
+  <div class="tempo-wrap">
+    TEMPO <input type="range" id="tempo" min="50" max="300" value="120">
+    <span id="tempoVal">120</span> BPM
+  </div>
+</div>
+
+<!-- Sheet -->
+<div class="sheet-wrap">
+  <div class="sheet-header">
+    <span class="sheet-title">📄 Partition</span>
+    <span class="sheet-hint">[ ] = accord · espace = pause · lettres = notes</span>
+  </div>
+  <textarea id="sheet" rows="4" placeholder="Écris ta partition ici… ex: q w e r t [qe] [wr] t"></textarea>
+  <div class="sheet-progress" id="sheetProgress"></div>
 </div>
 
 <script>
-// ══════════════════════════════════════════
-//  AUDIO
-// ══════════════════════════════════════════
-const actx = new (window.AudioContext || window.webkitAudioContext)();
+// ══════════════════════════════════════════════════════════════════
+//  ROBLOX / VIRTUAL PIANO — mapping standard QWERTY
+//  White keys: 1 q 2 w 3 e r 4 t 5 y 6 u i 7 o 8 p 9 a z 0 s x c v f b g h n j m k l
+//  Black keys = Shift + ... but in sheet notation uppercase = black key
+//
+//  Standard Virtual Piano layout (3 octaves visible, C3→C6):
+//  Octave 3:  1!Q@W#ER$T%YU^I&O*A(S)Z
+//  Octave 4:  ...same keys one octave up
+//
+//  We use the WELL-KNOWN Roblox/VP sheet notation:
+//  lowercase = white key, UPPERCASE = black key (sharp)
+//  Numbers: 1=C3, Q=D3, 2=C#3, W=D#3... etc.
+//
+//  Full standard Virtual Piano key→note table:
+// ══════════════════════════════════════════════════════════════════
+
+// Note: semitones from C4 (MIDI 60)
+// Virtual Piano standard mapping (most common, used by Roblox VP sheets):
+// Row: 1 ! q @ w # e r $ t % y u ^ i & o * p a ( s ) z Z x X c C v b B n N m M
+// Each key maps to a consecutive semitone
+
+// The canonical Virtual Piano layout (QWERTY):
+// Low oct:   1  !  q  @  w  #  e  r  $  t  %  y  u  ^  i  &  o  *  p
+// Mid oct:   a  (  s  )  z  Z  x  X  c  C  v  b  B  n  N  m  M
+// Plus some extras
+
+// We'll implement 2.5 octaves matching Roblox VP exactly
+// Key → semitone offset from C4
+const VP_MAP = {
+  // ── Octave 3 (C3 = -12 from C4) ──
+  '1': -12, '!': -11,
+  'q': -10, '@': -9,
+  'w': -8,  '#': -7,
+  'e': -6,
+  'r': -5,  '$': -4,
+  't': -3,  '%': -2,
+  'y': -1,
+  'u': 0,   '^': 1,
+  'i': 2,   '&': 3,
+  'o': 4,
+  'p': 5,   '*': 6,
+  // ── Octave 4 (C4 = 0) ──
+  'a': 7,   '(': 8,
+  's': 9,   ')': 10,
+  'z': 11,
+  'x': 12,  'X': 13,  // X uppercase = C#5
+  'c': 14,  'C': 15,
+  'v': 16,
+  'b': 17,  'B': 18,
+  'n': 19,  'N': 20,
+  'm': 21,  'M': 22,
+  // ── Octave 5 extras ──
+  'k': 23,  'K': 24,
+  'l': 25,  'L': 26,
+};
+
+// Also map shifted versions for QWERTY physical keys
+// When user presses shift+1 → '!', shift+q → 'Q' etc.
+// We unify: sheet notation uses exact chars above
+// For keyboard INPUT we need to map e.code → note
+
+// Physical keyboard input map (e.key → semitone) — QWERTY
+const KEY_INPUT = {
+  '1':  -12, '!': -11,
+  'q':  -10, '@':  -9, 'Q': -9,
+  'w':   -8, '#':  -7, 'W': -7,
+  'e':   -6, 'E':  -7, // E flat = W#... no, E alone = E3
+  'r':   -5, '$':  -4, 'R': -4,
+  't':   -3, '%':  -2, 'T': -2,
+  'y':   -1, 'Y':  -1,
+  'u':    0, '^':   1, 'U':  1,
+  'i':    2, '&':   3, 'I':  3,
+  'o':    4, 'O':   4,
+  'p':    5, '*':   6, 'P':  6,
+  'a':    7, '(':   8, 'A':  8,
+  's':    9, ')':  10, 'S': 10,
+  'z':   11, 'Z':  11,
+  'x':   12, 'X':  13,
+  'c':   14, 'C':  15,
+  'v':   16, 'V':  16,
+  'b':   17, 'B':  18,
+  'n':   19, 'N':  20,
+  'm':   21, 'M':  22,
+  'k':   23, 'K':  24,
+  'l':   25, 'L':  26,
+};
+
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function semiToName(s){
+  const mod = ((s%12)+12)%12;
+  const oct = 4 + Math.floor(s/12);
+  return NOTE_NAMES[mod]+oct;
+}
+function semiHue(s){return (((s%12)+12)%12)*30;}
+function hsl(h,s=100,l=60){return `hsl(${h},${s}%,${l}%)`;}
+
+// ══════════════════════════════════════════════════════════════════
+//  AUDIO ENGINE
+// ══════════════════════════════════════════════════════════════════
+const actx = new (window.AudioContext||window.webkitAudioContext)();
 const master = actx.createGain();
 const analyser = actx.createAnalyser();
 analyser.fftSize = 512;
@@ -194,353 +420,426 @@ master.gain.value = 0.4;
 master.connect(analyser);
 analyser.connect(actx.destination);
 
-function freq(semi) {
-  return 261.63 * Math.pow(2, semi / 12); // C4 = 0
-}
-
-// Each call creates a brand new oscillator → rapid notes always work
-function playNote(semi) {
-  if (actx.state === 'suspended') actx.resume();
-  const f = freq(semi);
+// Karplus-Strong-ish piano with Web Audio
+function playNote(semi){
+  if(actx.state==='suspended') actx.resume();
+  const f = 261.63*Math.pow(2,semi/12);
   const t = actx.currentTime;
 
-  const osc  = actx.createOscillator();
+  const osc1 = actx.createOscillator();
   const osc2 = actx.createOscillator();
-  const g1   = actx.createGain();
-  const g2   = actx.createGain();
+  const osc3 = actx.createOscillator();
+  const g = actx.createGain();
 
-  osc.type  = 'triangle';
-  osc2.type = 'sine';
-  osc.frequency.value  = f;
-  osc2.frequency.value = f * 2.001;
+  osc1.type = 'triangle'; osc1.frequency.value = f;
+  osc2.type = 'sine';     osc2.frequency.value = f*2;
+  osc3.type = 'sine';     osc3.frequency.value = f*3;
 
-  g1.gain.setValueAtTime(0, t);
-  g1.gain.linearRampToValueAtTime(0.36, t + 0.007);
-  g1.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+  // Piano-like envelope: fast attack, medium decay, low sustain
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.5, t+0.006);
+  g.gain.exponentialRampToValueAtTime(0.15, t+0.15);
+  g.gain.exponentialRampToValueAtTime(0.001, t+2.5);
 
-  g2.gain.setValueAtTime(0, t);
-  g2.gain.linearRampToValueAtTime(0.09, t + 0.007);
-  g2.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+  const g2 = actx.createGain(); g2.gain.value = 0.5;
+  const g3 = actx.createGain(); g3.gain.value = 0.15;
 
-  osc.connect(g1);  g1.connect(master);
-  osc2.connect(g2); g2.connect(master);
-  osc.start(t);  osc2.start(t);
-  osc.stop(t + 2.2); osc2.stop(t + 1.2);
+  osc1.connect(g); osc2.connect(g2); osc3.connect(g3);
+  g.connect(master); g2.connect(master); g3.connect(master);
+
+  osc1.start(t); osc2.start(t); osc3.start(t);
+  osc1.stop(t+3); osc2.stop(t+2); osc3.stop(t+1.5);
 }
 
-// ══════════════════════════════════════════
-//  KEY → SEMITONE MAP  (AZERTY + all keys)
-//  0 = C of current octave
-// ══════════════════════════════════════════
-// We use e.key (the character, layout-aware) so AZERTY users get correct mapping.
-// Bottom row = octave-1, home row = octave+0, AZERTY row = octave+1, number row = octave+2
-const KEY_MAP = {
-  // ── Bottom row (W X C V B N , ; : ! < >) ── octave - 1
-  '<': -14, 'w': -13, 'x': -12, 'c': -11, 'v': -10, 'b': -9,
-  'n': -8,  ',': -7,  ';': -6,  ':': -5,  '!': -4,
+// ══════════════════════════════════════════════════════════════════
+//  PIANO LAYOUT  — fixed 2.5 octaves matching Roblox VP
+// ══════════════════════════════════════════════════════════════════
+// Semitone range: -12 to +26 (C3 to D5)
+const OCT = [
+  {note:'C', s:0, black:false},
+  {note:'C#',s:1, black:true},
+  {note:'D', s:2, black:false},
+  {note:'D#',s:3, black:true},
+  {note:'E', s:4, black:false},
+  {note:'F', s:5, black:false},
+  {note:'F#',s:6, black:true},
+  {note:'G', s:7, black:false},
+  {note:'G#',s:8, black:true},
+  {note:'A', s:9, black:false},
+  {note:'A#',s:10,black:true},
+  {note:'B', s:11,black:false},
+];
 
-  // ── Home row (Q S D F G H J K L M ù *) ── octave + 0
-  'q': 0,  's': 1,  'd': 2,  'f': 3,  'g': 4,  'h': 5,
-  'j': 6,  'k': 7,  'l': 8,  'm': 9,  'ù': 10, '*': 11,
+const W=40,BW=27,GAP=2;
 
-  // ── AZERTY top row (A Z E R T Y U I O P ^ $) ── octave + 12
-  'a': 12, 'z': 13, 'e': 14, 'r': 15, 't': 16, 'y': 17,
-  'u': 18, 'i': 19, 'o': 20, 'p': 21, '^': 22, '$': 23,
-
-  // ── Number row (& é " ' ( - è _ ç à ) =) ── octave + 24
-  '&': 24, 'é': 25, '"': 26, "'": 27, '(': 28, '-': 29,
-  'è': 30, '_': 31, 'ç': 32, 'à': 33, ')': 34, '=': 35,
-};
-
-const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-
-function hsl(h,s=100,l=60) { return `hsl(${h},${s}%,${l}%)`; }
-function semiHue(s) { return (((s % 12) + 12) % 12) * 30; } // 0-330
-
-// Reverse map: semi → kbd label  
-function kbdLabel(semi) {
-  for (const [k, v] of Object.entries(KEY_MAP)) {
-    if (v === semi) return k === ' ' ? 'SP' : k.toUpperCase();
+// Find kbd label for a semitone
+function kbdLabel(semi){
+  for(const [k,v] of Object.entries(VP_MAP)){
+    if(v===semi) return k==='!'||k==='@'||k==='#'||k==='$'||k==='%'||k==='^'||k==='&'||k==='*'||k==='('||k===')'
+      ? 'SH+'+{'-11':'1','-9':'Q','-7':'W','-4':'R','-2':'T','1':'U','3':'I','6':'P','8':'A','10':'S'}[v]||k
+      : k.toUpperCase();
   }
   return '';
 }
 
-// ══════════════════════════════════════════
-//  PIANO LAYOUT
-// ══════════════════════════════════════════
-let currentOctave = 4;
-const W = 36, BW = 23, GAP = 2;
-
-const OCT_PATTERN = [
-  { note:'C',  s:0,  black:false },
-  { note:'C#', s:1,  black:true  },
-  { note:'D',  s:2,  black:false },
-  { note:'D#', s:3,  black:true  },
-  { note:'E',  s:4,  black:false },
-  { note:'F',  s:5,  black:false },
-  { note:'F#', s:6,  black:true  },
-  { note:'G',  s:7,  black:false },
-  { note:'G#', s:8,  black:true  },
-  { note:'A',  s:9,  black:false },
-  { note:'A#', s:10, black:true  },
-  { note:'B',  s:11, black:false },
-];
-
-function buildPiano() {
+function buildPiano(){
   const el = document.getElementById('keys');
-  el.innerHTML = '';
+  el.innerHTML='';
 
-  // Range covers all mapped semitones: -14 to 35
-  const startOct = -2, endOct = 3; // octet offsets
-  const notes = [];
-  for (let oct = startOct; oct < endOct; oct++) {
-    for (const n of OCT_PATTERN) {
-      notes.push({ ...n, semi: oct * 12 + n.s });
+  // Build notes from C3 (-12) to D5 (+26)
+  const notes=[];
+  for(let oct=-1;oct<=2;oct++){
+    for(const n of OCT){
+      const semi=oct*12+n.s;
+      if(semi>=-12&&semi<=26) notes.push({...n,semi});
     }
   }
+  const whites=notes.filter(n=>!n.black);
+  const whitePos={};
+  whites.forEach((n,i)=>{whitePos[n.semi]=i;});
 
-  const whites = notes.filter(n => !n.black);
-  const whitePos = {}; // semi → index
-  whites.forEach((n, i) => { whitePos[n.semi] = i; });
+  const totalW=whites.length*(W+GAP)-GAP;
+  el.style.width=totalW+'px';
+  el.style.position='relative';
 
-  const totalW = whites.length * (W + GAP) - GAP;
-  el.style.width = totalW + 'px';
-  el.style.position = 'relative';
-
-  // White keys
-  whites.forEach(n => {
-    const k = makeKey(n, false);
-    k.style.left = (whitePos[n.semi] * (W + GAP)) + 'px';
+  whites.forEach(n=>{
+    const k=makeKey(n,false);
+    k.style.left=(whitePos[n.semi]*(W+GAP))+'px';
     el.appendChild(k);
   });
-
-  // Black keys
-  notes.filter(n => n.black).forEach(n => {
-    const prevIdx = whitePos[n.semi - 1];
-    if (prevIdx === undefined) return;
-    const left = prevIdx * (W + GAP) + W - BW / 2;
-    const k = makeKey(n, true);
-    k.style.left = left + 'px';
+  notes.filter(n=>n.black).forEach(n=>{
+    const prev=whitePos[n.semi-1];
+    if(prev===undefined) return;
+    const k=makeKey(n,true);
+    k.style.left=(prev*(W+GAP)+W-BW/2)+'px';
     el.appendChild(k);
   });
 }
 
-function makeKey(n, isBlack) {
-  const el = document.createElement('div');
-  el.className = isBlack ? 'key-black' : 'key-white';
-  el.dataset.semi = n.semi;
-  el.style.width  = (isBlack ? BW : W) + 'px';
-  el.style.height = (isBlack ? 110 : 180) + 'px';
-  el.style.zIndex = isBlack ? 2 : 1;
-
-  const lb = kbdLabel(n.semi);
-  el.innerHTML = `<span class="key-note">${n.note}</span><span class="key-kbd">${lb}</span>`;
-
-  el.addEventListener('mousedown', e => { e.stopPropagation(); activate(n.semi); });
-  el.addEventListener('mouseup',   () => deactivate(n.semi));
-  el.addEventListener('mouseleave',() => deactivate(n.semi));
+function makeKey(n,isBlack){
+  const el=document.createElement('div');
+  el.className=isBlack?'kb':'kw';
+  el.dataset.semi=n.semi;
+  el.style.width=(isBlack?BW:W)+'px';
+  el.style.height=(isBlack?112:180)+'px';
+  const lb=kbdLabel(n.semi);
+  el.innerHTML=`<span class="key-note">${n.note}</span><span class="key-kbd">${lb}</span>`;
+  el.addEventListener('mousedown',e=>{e.stopPropagation();activateKey(n.semi);});
+  el.addEventListener('mouseup',()=>deactivateKey(n.semi));
+  el.addEventListener('mouseleave',()=>deactivateKey(n.semi));
   return el;
 }
 
-// ══════════════════════════════════════════
-//  RGB
-// ══════════════════════════════════════════
-let glowHue = 200, glowAlpha = 0;
+// ══════════════════════════════════════════════════════════════════
+//  RGB / VISUAL
+// ══════════════════════════════════════════════════════════════════
+let glowHue=260,glowAlpha=0;
 
-function setGlow(hue) {
-  glowHue = hue;
-  glowAlpha = 1;
-
-  const c = hsl(hue, 100, 65);
-  const cs = `0 0 30px ${hsl(hue,100,65)}, 0 0 60px ${hsl(hue,100,50)}`;
-  document.getElementById('title').style.cssText    = `color:${c};text-shadow:${cs}`;
-  document.getElementById('noteDisp').style.cssText = `color:${c};text-shadow:0 0 20px ${c}`;
-  document.getElementById('bgGlow').style.background =
-    `radial-gradient(ellipse 70% 55% at 50% 50%, ${hsl(hue,80,7)} 0%, transparent 68%)`;
+function setGlow(hue){
+  glowHue=hue; glowAlpha=1;
+  const c=hsl(hue,100,65);
+  const sh=`0 0 30px ${hsl(hue,100,65)},0 0 60px ${hsl(hue,100,45)}`;
+  document.getElementById('title').style.cssText=`color:${c};text-shadow:${sh}`;
+  document.getElementById('noteDisp').style.cssText=`color:${c};text-shadow:0 0 16px ${c}`;
+  document.getElementById('bgGlow').style.background=
+    `radial-gradient(ellipse 65% 50% at 50% 40%,${hsl(hue,80,7)} 0%,transparent 68%)`;
 }
 
-setInterval(() => {
-  glowAlpha *= 0.95;
-  if (glowAlpha < 0.02) {
-    glowAlpha = 0;
-    document.getElementById('bgGlow').style.background = 'none';
-    document.getElementById('title').style.cssText    = 'color:#fff';
-    document.getElementById('noteDisp').style.color   = 'rgba(255,255,255,0.3)';
+setInterval(()=>{
+  glowAlpha*=0.93;
+  if(glowAlpha<0.01){
+    glowAlpha=0;
+    document.getElementById('bgGlow').style.background='none';
+    document.getElementById('title').style.cssText='color:#fff';
+    document.getElementById('noteDisp').style.color='rgba(255,255,255,0.2)';
   }
-}, 40);
+},40);
 
-// ══════════════════════════════════════════
-//  ACTIVATE / DEACTIVATE
-// ══════════════════════════════════════════
-const activeSet = new Set();
+const activeKeys=new Set();
 
-function activate(semi) {
-  const absSemi = semi + (currentOctave - 4) * 12;
-  playNote(absSemi); // ALWAYS plays, no gating
-
-  const hue = semiHue(semi);
+function activateKey(semi){
+  playNote(semi);
+  const hue=semiHue(semi);
   setGlow(hue);
-
-  // Note name
-  const mod = ((semi % 12) + 12) % 12;
-  document.getElementById('noteDisp').textContent = NOTE_NAMES[mod];
-
-  // Visual
-  const el = document.querySelector(`[data-semi="${semi}"]`);
-  if (el) {
+  document.getElementById('noteDisp').textContent=semiToName(semi);
+  const el=document.querySelector(`[data-semi="${semi}"]`);
+  if(el){
     el.classList.add('active');
-    const isBlack = el.classList.contains('key-black');
-    el.style.boxShadow = isBlack
-      ? `0 3px 0 #000, 0 0 20px ${hsl(hue,100,50)}, inset 0 0 14px ${hsl(hue,100,25)}`
-      : `0 1px 0 #666, 0 0 28px ${hsl(hue,100,60)}, inset 0 0 12px ${hsl(hue,80,88)}`;
-    el.style.background = isBlack
-      ? `linear-gradient(180deg, ${hsl(hue,75,18)} 0%, ${hsl(hue,60,6)} 100%)`
-      : `linear-gradient(180deg, #fff 0%, ${hsl(hue,60,85)} 100%)`;
+    const ib=el.classList.contains('kb');
+    el.style.boxShadow=ib
+      ?`0 3px 0 #000,0 0 22px ${hsl(hue,100,50)},inset 0 0 14px ${hsl(hue,100,20)}`
+      :`0 1px 0 #666,0 0 28px ${hsl(hue,100,62)},inset 0 0 12px ${hsl(hue,80,90)}`;
+    el.style.background=ib
+      ?`linear-gradient(180deg,${hsl(hue,80,18)} 0%,${hsl(hue,60,6)} 100%)`
+      :`linear-gradient(180deg,#fff 0%,${hsl(hue,60,85)} 100%)`;
   }
-
-  particles(el, hue);
-  activeSet.add(semi);
+  spawnParticles(el,hue);
+  activeKeys.add(semi);
 }
 
-function deactivate(semi) {
-  if (!activeSet.has(semi)) return;
-  activeSet.delete(semi);
-  const el = document.querySelector(`[data-semi="${semi}"]`);
-  if (el) {
-    el.classList.remove('active');
-    el.style.boxShadow = '';
-    el.style.background = '';
-  }
+function deactivateKey(semi){
+  if(!activeKeys.has(semi)) return;
+  activeKeys.delete(semi);
+  const el=document.querySelector(`[data-semi="${semi}"]`);
+  if(el){el.classList.remove('active');el.style.boxShadow='';el.style.background='';}
 }
 
-// ══════════════════════════════════════════
-//  PARTICLES
-// ══════════════════════════════════════════
-function particles(el, hue) {
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  const cx = r.left + r.width / 2, cy = r.top + r.height * 0.25;
-  for (let i = 0; i < 6; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const sz = 3 + Math.random() * 5;
-    p.style.cssText = `
-      left:${cx}px; top:${cy}px; width:${sz}px; height:${sz}px;
+function spawnParticles(el,hue){
+  if(!el) return;
+  const r=el.getBoundingClientRect();
+  const cx=r.left+r.width/2,cy=r.top+r.height*0.2;
+  for(let i=0;i<5;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const sz=3+Math.random()*5;
+    p.style.cssText=`left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;
       margin:${-sz/2}px 0 0 ${-sz/2}px;
-      background:hsl(${hue + (Math.random()-.5)*25},100%,65%);
+      background:hsl(${hue+(Math.random()-.5)*25},100%,65%);
       box-shadow:0 0 8px hsl(${hue},100%,55%);
-      --dx:${(Math.random()-.5)*70}px; --dy:${-(15+Math.random()*55)}px;
-      animation-duration:${0.45+Math.random()*0.35}s;
-      animation-delay:${Math.random()*0.04}s;
-    `;
+      --dx:${(Math.random()-.5)*60}px;--dy:${-(10+Math.random()*50)}px;
+      animation-duration:${0.4+Math.random()*0.35}s;
+      animation-delay:${Math.random()*0.04}s;`;
     document.body.appendChild(p);
-    p.addEventListener('animationend', () => p.remove());
+    p.addEventListener('animationend',()=>p.remove());
   }
 }
 
-// ══════════════════════════════════════════
-//  KEYBOARD EVENTS
-// ══════════════════════════════════════════
-const codeToSemi = {}; // e.code → semi (for proper keyup)
-
-document.addEventListener('keydown', e => {
-  if (e.repeat) return;
-  const key = e.key;
-
-  if (key === 'ArrowUp')   { currentOctave = Math.min(8, currentOctave+1); buildPiano(); updateDots(); return; }
-  if (key === 'ArrowDown') { currentOctave = Math.max(0, currentOctave-1); buildPiano(); updateDots(); return; }
-  if (key >= '0' && key <= '8') { currentOctave = +key; buildPiano(); updateDots(); return; }
-
-  const semi = KEY_MAP[key] ?? KEY_MAP[key.toLowerCase()];
-  if (semi === undefined) return;
+// ══════════════════════════════════════════════════════════════════
+//  KEYBOARD INPUT
+// ══════════════════════════════════════════════════════════════════
+const codeMap={};
+document.addEventListener('keydown',e=>{
+  if(e.repeat) return;
+  if(e.target===document.getElementById('sheet')) return;
+  const key=e.shiftKey?e.key.toUpperCase():e.key;
+  const semi=KEY_INPUT[e.key]??KEY_INPUT[key];
+  if(semi===undefined) return;
   e.preventDefault();
-
-  codeToSemi[e.code] = semi;
-  activate(semi);
+  codeMap[e.code]=semi;
+  activateKey(semi);
+});
+document.addEventListener('keyup',e=>{
+  const semi=codeMap[e.code];
+  if(semi!==undefined){deactivateKey(semi);delete codeMap[e.code];}
 });
 
-document.addEventListener('keyup', e => {
-  const semi = codeToSemi[e.code];
-  if (semi !== undefined) {
-    deactivate(semi);
-    delete codeToSemi[e.code];
+// ══════════════════════════════════════════════════════════════════
+//  AUTO PLAY ENGINE
+// ══════════════════════════════════════════════════════════════════
+let autoPlaying=false;
+let autoTimer=null;
+let autoIdx=0;
+let autoTokens=[];
+
+// Parse sheet into tokens
+// Token types: note (string), chord (array of strings), pause, end
+function parseSheet(text){
+  const tokens=[];
+  let i=0;
+  while(i<text.length){
+    const c=text[i];
+    if(c==='['){
+      // Chord
+      let j=i+1,chord=[];
+      while(j<text.length&&text[j]!==']'){
+        if(text[j]!=' '&&text[j]!=='\n') chord.push(text[j]);
+        j++;
+      }
+      if(chord.length>0) tokens.push({type:'chord',keys:chord});
+      i=j+1;
+    } else if(c===' '||c==='\n'){
+      tokens.push({type:'pause'});
+      i++;
+    } else if(c!==']'){
+      tokens.push({type:'note',key:c});
+      i++;
+    } else { i++; }
   }
-});
+  return tokens;
+}
 
-// ══════════════════════════════════════════
-//  OCTAVE DOTS
-// ══════════════════════════════════════════
-function updateDots() {
-  const strip = document.getElementById('dots');
-  strip.innerHTML = '';
-  for (let i = 0; i <= 8; i++) {
-    const d = document.createElement('div');
-    d.className = 'octave-dot' + (i === currentOctave ? ' active' : '');
-    if (i === currentOctave) d.style.cssText = `background:${hsl(semiHue(0))}; box-shadow:0 0 10px ${hsl(semiHue(0))}`;
-    d.title = `Octave ${i}`;
-    d.addEventListener('click', () => { currentOctave = i; buildPiano(); updateDots(); });
-    strip.appendChild(d);
+function getBPM(){return parseInt(document.getElementById('tempo').value)||120;}
+function noteDelay(){return Math.round(60000/getBPM());}
+
+function startAutoPlay(){
+  if(autoPlaying){stopAutoPlay();return;}
+  autoPlaying=true;
+  const btn=document.getElementById('btnPlay');
+  btn.textContent='⏹ Stop';btn.classList.add('playing');
+
+  const text=document.getElementById('sheet').value.trim();
+  if(!text){stopAutoPlay();return;}
+  autoTokens=parseSheet(text);
+  autoIdx=0;
+
+  document.getElementById('sheet').style.display='none';
+  document.getElementById('sheetProgress').style.display='block';
+  renderProgress(text,-1);
+
+  playNext();
+}
+
+function stopAutoPlay(){
+  autoPlaying=false;
+  clearTimeout(autoTimer);
+  const btn=document.getElementById('btnPlay');
+  btn.textContent='▶ Auto Play';btn.classList.remove('playing');
+  document.getElementById('sheet').style.display='block';
+  document.getElementById('sheetProgress').style.display='none';
+  // Release all keys
+  [...activeKeys].forEach(s=>deactivateKey(s));
+}
+
+function playNext(){
+  if(!autoPlaying) return;
+  if(autoIdx>=autoTokens.length){stopAutoPlay();return;}
+
+  const tok=autoTokens[autoIdx];
+  const delay=noteDelay();
+
+  if(tok.type==='note'){
+    const semi=VP_MAP[tok.key];
+    if(semi!==undefined){
+      activateKey(semi);
+      setTimeout(()=>deactivateKey(semi),delay*0.7);
+    }
+    highlightProgress(autoIdx);
+    autoIdx++;
+    autoTimer=setTimeout(playNext,delay);
+  } else if(tok.type==='chord'){
+    const semis=tok.keys.map(k=>VP_MAP[k]).filter(s=>s!==undefined);
+    semis.forEach(s=>activateKey(s));
+    setTimeout(()=>semis.forEach(s=>deactivateKey(s)),delay*0.7);
+    highlightProgress(autoIdx);
+    autoIdx++;
+    autoTimer=setTimeout(playNext,delay);
+  } else if(tok.type==='pause'){
+    highlightProgress(autoIdx);
+    autoIdx++;
+    autoTimer=setTimeout(playNext,delay*0.5);
   }
 }
 
-// ══════════════════════════════════════════
-//  VISUALIZER
-// ══════════════════════════════════════════
-const canvas = document.getElementById('viz');
-const vc = canvas.getContext('2d');
-const N = analyser.frequencyBinCount;
-const tBuf = new Uint8Array(N);
-const fBuf = new Uint8Array(N);
-let vizHue = 200;
+// Render progress display
+function renderProgress(text,cur){
+  const el=document.getElementById('sheetProgress');
+  // Map token index → char range
+  let html='';let i=0,ti=0;
+  while(i<text.length){
+    const c=text[i];
+    let cls=ti<autoIdx?'played-char':ti===autoIdx?'current-char':'unplayed-char';
+    if(c==='['){
+      let j=i+1,inner='[';
+      while(j<text.length&&text[j]!==']'){inner+=text[j];j++;}
+      inner+=']';
+      html+=`<span class="${cls}">${escHtml(inner)}</span>`;
+      i=j+1;ti++;
+    } else if(c===' '||c==='\n'){
+      html+=`<span class="${cls}"> </span>`;i++;ti++;
+    } else if(c!==']'){
+      html+=`<span class="${cls}">${escHtml(c)}</span>`;i++;ti++;
+    } else {i++;}
+  }
+  el.innerHTML=html;
+  // Scroll to current
+  const cur_el=el.querySelector('.current-char');
+  if(cur_el) cur_el.scrollIntoView({block:'nearest'});
+}
 
-function drawViz() {
+function highlightProgress(idx){
+  autoIdx=idx; // already set but ensure
+  renderProgress(document.getElementById('sheet').value,idx);
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.getElementById('btnPlay').addEventListener('click',startAutoPlay);
+document.getElementById('btnClear').addEventListener('click',()=>{
+  stopAutoPlay();
+  document.getElementById('sheet').value='';
+});
+document.getElementById('tempo').addEventListener('input',function(){
+  document.getElementById('tempoVal').textContent=this.value;
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  PRESET SONGS  (Virtual Piano notation)
+// ══════════════════════════════════════════════════════════════════
+const SONGS={
+  megalovania:`[qe] [qe] u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] r
+[wt] [wt] u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] i
+[qe] [qe] u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] e
+t t u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] w`,
+
+  riverflows:`u u [yu] u [yu] u [yu] [tu] y [yu] u
+y y [ey] y [ey] y [ey] [ry] e [ey] y
+t t [qt] t [qt] t [qt] [wt] q [qt] t
+u u [yu] u [yu] u [yu] [tu] y t r e
+[qe] [qe] [qe] [we] [qe] q [qe] [qe] [we] [qe]
+[qe] [qe] [qe] [we] [qe] q [qe] [qe] [we] [qe]`,
+
+  rushb:`s s s s s s s s s s s s
+s a z a s z s a z a s z
+[sz] [sz] z [sz] z [az] [sz] [sz] [sz] [sz] z
+[sz] [sz] z [sz] z [az] [sz] [sz] [sz] [sz]
+s s s s s s s s s s s s`,
+
+  happybday:`t t u t p o t t u t [ps] [po] t t [ut] r o p
+t t u t p o t t u t [ps] [po]`,
+
+  twinkle:`u u p p o o p  i i o o [pi] [pi] p  u u i i o o [pi] [pi] i  p p o o i i o`,
+
+  nokia:`e r u [qs] u r e  w q [1q] q [qw]  e r u [qs] u r [eq] q`,
+};
+
+document.getElementById('songSelect').addEventListener('change',function(){
+  if(!this.value) return;
+  stopAutoPlay();
+  document.getElementById('sheet').value=SONGS[this.value]||'';
+  this.value='';
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  VISUALIZER
+// ══════════════════════════════════════════════════════════════════
+const canvas=document.getElementById('viz');
+const vc=canvas.getContext('2d');
+const N=analyser.frequencyBinCount;
+const tBuf=new Uint8Array(N);
+const fBuf=new Uint8Array(N);
+let vizHue=260;
+
+function drawViz(){
   requestAnimationFrame(drawViz);
   analyser.getByteTimeDomainData(tBuf);
   analyser.getByteFrequencyData(fBuf);
-
-  vizHue += (glowHue - vizHue) * 0.08;
-
-  vc.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Frequency bars (background)
-  const bw = canvas.width / 80;
-  for (let i = 0; i < 80; i++) {
-    const v = fBuf[i] / 255;
-    if (v < 0.04) continue;
-    const bh = v * canvas.height * 0.75;
-    vc.fillStyle = `hsla(${vizHue + i*2},100%,60%,${v * 0.35})`;
-    vc.fillRect(i * bw, canvas.height - bh, bw - 1, bh);
+  vizHue+=(glowHue-vizHue)*0.06;
+  vc.clearRect(0,0,canvas.width,canvas.height);
+  // Freq bars
+  const bw=canvas.width/80;
+  for(let i=0;i<80;i++){
+    const v=fBuf[i]/255;
+    if(v<0.04) continue;
+    const bh=v*canvas.height*0.7;
+    vc.fillStyle=`hsla(${vizHue+i*2},100%,60%,${v*0.3})`;
+    vc.fillRect(i*bw,canvas.height-bh,bw-1,bh);
   }
-
   // Waveform
-  const g = vc.createLinearGradient(0, 0, canvas.width, 0);
-  g.addColorStop(0,   hsl(vizHue - 25));
-  g.addColorStop(0.5, hsl(vizHue, 100, 75));
-  g.addColorStop(1,   hsl(vizHue + 25));
-
-  vc.beginPath();
-  vc.strokeStyle = g;
-  vc.lineWidth = 2;
-  vc.shadowColor = hsl(vizHue, 100, 60);
-  vc.shadowBlur  = 10;
-
-  const slice = canvas.width / N;
-  let x = 0;
-  for (let i = 0; i < N; i++) {
-    const v = tBuf[i] / 128;
-    const y = v * canvas.height / 2;
-    i === 0 ? vc.moveTo(x, y) : vc.lineTo(x, y);
-    x += slice;
+  const g=vc.createLinearGradient(0,0,canvas.width,0);
+  g.addColorStop(0,hsl(vizHue-25));
+  g.addColorStop(0.5,hsl(vizHue,100,75));
+  g.addColorStop(1,hsl(vizHue+25));
+  vc.beginPath();vc.strokeStyle=g;vc.lineWidth=2;
+  vc.shadowColor=hsl(vizHue,100,60);vc.shadowBlur=8;
+  const sl=canvas.width/N;let x=0;
+  for(let i=0;i<N;i++){
+    const v=tBuf[i]/128;const y=v*canvas.height/2;
+    i===0?vc.moveTo(x,y):vc.lineTo(x,y);x+=sl;
   }
-  vc.stroke();
-  vc.shadowBlur = 0;
+  vc.stroke();vc.shadowBlur=0;
 }
 
-// ══════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════
 buildPiano();
-updateDots();
 drawViz();
 </script>
 </body>
