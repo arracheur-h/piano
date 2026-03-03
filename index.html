@@ -2,365 +2,304 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <title>Roblox Style Piano - RGB Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Piano Pro RGB - Audio Reactif</title>
   <style>
     body {
       margin: 0;
-      min-height: 100vh;
-      background: #0d0d0d;
-      color: #e0e0e0;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background: #0a0a0a;
+      color: #ddd;
+      font-family: Arial, sans-serif;
       overflow-x: hidden;
     }
 
     header {
-      padding: 20px;
       text-align: center;
-      background: linear-gradient(180deg, #1a1a1a, #0d0d0d);
-      width: 100%;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      padding: 15px;
+      background: #111;
+      box-shadow: 0 4px 15px #000;
     }
 
     h1 {
       margin: 0;
-      font-size: 2.4rem;
-      background: linear-gradient(90deg, #00ffff, #ff00aa, #ffff00);
+      font-size: 2.2rem;
+      background: linear-gradient(90deg, #ff3366, #33ccff, #ccff33);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
     .controls {
-      margin: 20px 0;
+      padding: 15px;
+      text-align: center;
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
       justify-content: center;
-      align-items: center;
+      gap: 12px;
     }
 
     button, select {
-      padding: 10px 20px;
+      padding: 10px 18px;
       font-size: 1rem;
+      background: #222;
+      color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      background: #2a2a2a;
-      color: white;
-      transition: all 0.2s;
+      transition: 0.2s;
     }
 
-    button:hover, select:hover { background: #444; }
-    button.active { background: #ff0066; box-shadow: 0 0 15px #ff0066; }
+    button:hover { background: #444; }
+    button.active { background: #ff3366; box-shadow: 0 0 20px #ff3366; }
 
-    .piano-container {
-      position: relative;
-      width: 100%;
-      max-width: 1400px;
+    .piano-wrapper {
       overflow-x: auto;
       padding: 20px 0;
     }
 
     .piano {
       display: flex;
+      height: 260px;
       position: relative;
-      height: 280px;
+      margin: 0 auto;
+      width: fit-content;
       user-select: none;
     }
 
     .key {
       position: relative;
+      border: 1px solid #222;
       box-sizing: border-box;
-      border: 1px solid #111;
-      border-radius: 0 0 10px 10px;
-      transition: transform 0.08s, box-shadow 0.15s;
-      overflow: hidden;
+      border-radius: 0 0 12px 12px;
+      transition: transform 0.07s, box-shadow 0.12s;
     }
 
     .white {
-      width: 60px;
+      width: 58px;
       height: 100%;
-      background: linear-gradient(180deg, #f8f8f8, #d0d0d0);
+      background: linear-gradient(#fefefe, #c8c8c8, #aaa);
       z-index: 1;
     }
 
     .black {
-      width: 42px;
-      height: 65%;
+      width: 38px;
+      height: 62%;
       background: #111;
-      margin: 0 -21px;
-      z-index: 2;
-      border-radius: 0 0 14px 14px;
+      margin: 0 -19px;
+      z-index: 10;
+      border-radius: 0 0 16px 16px;
     }
 
     .key.pressed {
-      transform: translateY(8px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.7);
+      transform: translateY(10px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.8);
     }
 
-    /* RGB audio reactif */
+    /* RGB glow pro */
+    .key.glow::after {
+      content: "";
+      position: absolute;
+      inset: -10px;
+      background: conic-gradient(from var(--hue, 180deg), #ff00aa, #00ffff, #ffff00, #ff8800, #aa00ff, #00ff88);
+      background-size: 300% 300%;
+      filter: blur(18px);
+      opacity: 0.75;
+      animation: rotate 8s linear infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+
     .key.glow {
-      box-shadow: 0 0 25px var(--glow-color, #00ffff);
-      border-color: var(--glow-color, #00ffff);
+      box-shadow: 0 0 30px var(--glow, #00ffff);
+      border-color: var(--glow, #00ffff);
     }
 
-    .editor {
-      width: 90%;
-      max-width: 1000px;
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .sheet-editor {
+      max-width: 1100px;
       margin: 30px auto;
       padding: 20px;
-      background: #1a1a1a;
+      background: #111;
       border-radius: 10px;
-      box-shadow: 0 0 30px rgba(0,255,255,0.1);
     }
 
     textarea {
       width: 100%;
-      min-height: 120px;
+      height: 140px;
       background: #000;
-      color: #0f0;
+      color: #0f8;
       font-family: monospace;
-      font-size: 1.1rem;
       padding: 12px;
       border: 1px solid #333;
       border-radius: 6px;
-      resize: vertical;
-    }
-
-    .help {
-      font-size: 0.9rem;
-      color: #aaa;
-      margin-top: 10px;
+      font-size: 1.05rem;
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Piano RGB Audio-Réactif</h1>
+  <h1>Roblox Piano RGB Pro</h1>
 </header>
 
 <div class="controls">
-  <button id="playDemo">Jouer démo</button>
-  <button id="stopDemo">Stop</button>
-  <select id="songSelect">
-    <option value="">Choisir une chanson...</option>
-    <option value="interstellar">Interstellar (simplifié)</option>
-    <option value="gojo">Gojo Theme (JJK)</option>
-    <option value="furelise">Für Elise (intro)</option>
+  <button id="playBtn">Jouer chanson</button>
+  <button id="stopBtn">Stop</button>
+  <select id="song">
+    <option value="">Choisir une musique populaire Roblox...</option>
+    <option value="rushe">Rush E</option>
+    <option value="goldenhour">Golden Hour - JVKE</option>
+    <option value="furelise">Für Elise</option>
+    <option value="cupid">Cupid - FIFTY FIFTY</option>
+    <option value="fnaf">FNAF Song</option>
   </select>
-  <button id="playSheet">Jouer partition</button>
+  <button id="playCustom">Jouer ta partition</button>
 </div>
 
-<div class="piano-container">
+<div class="piano-wrapper">
   <div class="piano" id="piano"></div>
 </div>
 
-<div class="editor">
-  <h2>Éditeur de partition simple</h2>
-  <textarea id="sheet" placeholder="Exemple : C4 D4 E4 F4 G4 A4 B4 C5 ... (notes en majuscules + numéro d'octave)"># Für Elise intro exemple
-E5 D#5 E5 D#5 E5 B4 D5 C5 A4 
-C5 E4 A4 B4 E4 G#4 B4 C5 E5
-... modifie moi !"></textarea>
-  <div class="help">Format : notes + octave (C4 = Do milieu). Sépare par espace. Supporte # pour dièse (ex: C#4). Tempo ~120 bpm.</div>
+<div class="sheet-editor">
+  <h3>Éditeur partition (modifie et joue !)</h3>
+  <textarea id="customSheet">[r6] [t6] [y7] u y t r [e6] [r6] [t6] [y7] u y t r   // exemple Rush E début</textarea>
+  <p style="color:#888; font-size:0.9rem;">Format Roblox-like : [a] = touche a, [Q] = touche noire Q, [r6] = r octave 6, etc. Espace = pause courte.</p>
 </div>
 
 <script>
-// ────────────────────────────────────────────────
-// CONFIG
-// ────────────────────────────────────────────────
-const OCTAVES = 4;               // de C2 à C6 → 49 touches
-const START_OCTAVE = 2;
-const WHITE_WIDTH = 60;
-const BLACK_WIDTH = 42;
+// Mapping Roblox-like (QWERTY)
+const keyMap = {
+  // Blanches minuscules
+  "a":0, "s":1, "d":2, "f":3, "g":4, "h":5, "j":6, "k":7, "l":8, ";":9, "'":10, "]":11,
+  // Noires MAJUSCULES
+  "Q":12, "W":13, "E":14,                  "T":15, "Y":16, "U":17, "I":18, "O":19, "P":20,
+  // Octave +1 (z à , etc.)
+  "z":12, "x":13, "c":14, "v":15, "b":16, "n":17, "m":18, ",":19, ".":20, "/":21
+  // Ajoute plus si besoin (shift + lettres pour octaves sup)
+};
 
-const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const isBlack = [false, true, false, true, false, false, true, false, true, false, true, false];
+const START_NOTE = 36; // C3 MIDI note
+const keys = [];
+const piano = document.getElementById("piano");
 
-const keyMap = {}; // clavier → index
-"awsedftgyhujkolp;['".split('').forEach((k,i)=> keyMap[k] = i); // A→; pour blanches + noires
+for (let i = 0; i < 36; i++) {  // ~3 octaves pleines + un peu plus
+  const isBlackNote = [1,3,6,8,10].includes(i % 12);
+  const key = document.createElement("div");
+  key.classList.add("key", isBlackNote ? "black" : "white");
+  key.dataset.index = i;
+  key.dataset.midi = START_NOTE + i;
 
-const baseFreq = 65.41; // C2
-function getFreq(index) {
-  return baseFreq * Math.pow(2, index / 12);
+  key.addEventListener("pointerdown", () => playAndGlow(i));
+  piano.appendChild(key);
+  keys.push(key);
 }
 
-// ────────────────────────────────────────────────
-// AUDIO
-// ────────────────────────────────────────────────
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = audioCtx.createAnalyser();
-analyser.fftSize = 2048;
-const bufferLength = analyser.frequencyBinCount;
-const dataArray = new Uint8Array(bufferLength);
+// Audio
+const ctx = new AudioContext();
+const analyser = ctx.createAnalyser();
+analyser.fftSize = 1024;
+const gainNode = ctx.createGain();
+gainNode.gain.value = 0.4;
+gainNode.connect(analyser);
+analyser.connect(ctx.destination);
 
-let masterGain = audioCtx.createGain();
-masterGain.gain.value = 0.35;
-masterGain.connect(analyser);
-analyser.connect(audioCtx.destination);
-
-function playNote(freq, duration = 0.6, velocity = 0.8) {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "sawtooth"; // ou "triangle" pour plus doux
+function playNote(midi, dur = 0.6) {
+  const freq = 440 * Math.pow(2, (midi - 69) / 12);
+  const osc = ctx.createOscillator();
+  osc.type = "triangle"; // plus piano-like
   osc.frequency.value = freq;
 
-  gain.gain.setValueAtTime(velocity * 0.4, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0.01, ctx.currentTime);
+  env.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.02);
+  env.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
 
-  osc.connect(gain);
-  gain.connect(masterGain);
+  osc.connect(env).connect(gainNode);
   osc.start();
-  osc.stop(audioCtx.currentTime + duration);
+  osc.stop(ctx.currentTime + dur);
 }
 
-// ────────────────────────────────────────────────
-// Création clavier
-// ────────────────────────────────────────────────
-const piano = document.getElementById("piano");
-const keys = [];
+function playAndGlow(idx, vel = 0.9) {
+  const midi = START_NOTE + idx;
+  playNote(midi, 0.8);
 
-for (let oct = START_OCTAVE; oct < START_OCTAVE + OCTAVES; oct++) {
-  for (let i = 0; i < 12; i++) {
-    const note = noteNames[i] + oct;
-    const index = (oct - START_OCTAVE) * 12 + i;
-    const key = document.createElement("div");
-    key.classList.add("key", isBlack[i] ? "black" : "white");
-    key.dataset.note = note;
-    key.dataset.index = index;
-    key.dataset.freq = getFreq(index);
+  const key = keys[idx];
+  key.classList.add("pressed");
 
-    key.addEventListener("pointerdown", () => {
-      playNote(getFreq(index), 1.2, 1);
-      key.classList.add("pressed");
-    });
+  // RGB selon hauteur
+  const hue = ((midi - START_NOTE) / 36) * 300; // bas rouge → haut violet/bleu
+  key.style.setProperty("--hue", hue + "deg");
+  key.style.setProperty("--glow", `hsl(${hue}, 100%, 60%)`);
+  key.classList.add("glow");
 
-    key.addEventListener("pointerup",  () => key.classList.remove("pressed"));
-    key.addEventListener("pointerleave", () => key.classList.remove("pressed"));
-
-    piano.appendChild(key);
-    keys.push(key);
-  }
+  setTimeout(() => {
+    key.classList.remove("pressed", "glow");
+  }, 350);
 }
 
-// Clavier physique (A → P + dièses)
+// Clavier input
 document.addEventListener("keydown", e => {
   if (e.repeat) return;
-  const k = e.key.toLowerCase();
-  const idx = keyMap[k];
-  if (idx !== undefined) {
-    const keyEl = keys[idx];
-    playNote(getFreq(idx), 1.2, 1);
-    keyEl.classList.add("pressed");
+  const k = e.key.toUpperCase(); // support majuscules pour noires
+  const low = e.key.toLowerCase();
+  const idx = keyMap[k] ?? keyMap[low];
+  if (idx !== undefined && idx < keys.length) {
+    playAndGlow(idx);
   }
 });
 
-document.addEventListener("keyup", e => {
-  const k = e.key.toLowerCase();
-  const idx = keyMap[k];
-  if (idx !== undefined) keys[idx].classList.remove("pressed");
-});
-
-// ────────────────────────────────────────────────
-// RGB AUDIO VISUALIZER (réagit au son global)
-// ────────────────────────────────────────────────
-function updateVisualizer() {
-  analyser.getByteFrequencyData(dataArray);
-
-  let max = 0, sum = 0, count = 0;
-  for (let i = 0; i < bufferLength; i++) {
-    if (dataArray[i] > 40) {
-      sum += dataArray[i];
-      count++;
-      if (dataArray[i] > max) max = dataArray[i];
-    }
-  }
-  const avg = count > 0 ? sum / count : 0;
-  const intensity = Math.min(1, avg / 180);
-
-  // couleur dominante : basse → rouge, mid → vert, high → bleu
-  let hue = 200 - (intensity * 200); // bleu → violet → rouge
-  let sat = 90 + intensity * 10;
-  let lit = 50 + intensity * 40;
-
-  const color = `hsl(${hue}, ${sat}%, ${lit}%)`;
-
-  keys.forEach(key => {
-    if (key.classList.contains("pressed") || intensity > 0.15) {
-      key.style.setProperty("--glow-color", color);
-      key.classList.add("glow");
-    } else {
-      key.classList.remove("glow");
-    }
-  });
-
-  requestAnimationFrame(updateVisualizer);
-}
-updateVisualizer();
-
-// ────────────────────────────────────────────────
-// Partition & Autoplay
-// ────────────────────────────────────────────────
+// Chansons (séquences Roblox-like simplifiées)
 const songs = {
-  interstellar: "C3 G3 Eb4 C4 G4 Eb5 C5 G5 Eb6 C6 G5 Eb5 C5 G4 Eb4 C4 G3 Eb4 C4".split(" "),
-  gojo: "E4 G4 B4 E5 G5 B5 E6 B5 G5 E5 B4 G4 E4 B3 G3 E3".split(" "), // simplifié "If I Am With You" vibe
-  furelise: "E5 D#5 E5 D#5 E5 B4 D5 C5 A4 C5 E4 A4 B4 E4 G#4 B4 C5 E5 E5 D#5 E5 D#5 E5 B4 D5 C5 A4 C5 E4 A4 B4 E4 C5 B4 A4".split(" ")
+  rushe: "[r6][t6][y7] u y t r [e6][r6][t6][y7] u y t r [Q6][W6][E7] T E W Q [r5][t5][y6] u y t r [e5][r5][t5][y6] u y t r".split(" "),
+  goldenhour: "[8j][8k][9l] [0;] [9k][8j] [7h][8j][9k] [0l][9k][8j] [7h][6g][7h] [8j][9k][0l]".split(" "),
+  furelise: "[e6][d#6][e6][d#6][e6][b5][d6][c6][a5] [c6][e5][a5][b5] [e5][g#5][b5][c6][e6]".split(" "),
+  cupid: "[0q][wr][ty][ui][op][a s] [d f][g h][j k][l ;] [tw][ey][ui][op][as]".split(" "),
+  fnaf: "[8r][8t][9y][0u][9y][8t][7r][8r][9t][0y][9u][8y][7t] [6y][7u][8i][9o]".split(" ")
 };
 
-let autoplayId = null;
+let interval = null;
 
-function playSequence(notes, delay = 180) {
-  stopAutoplay();
+function playSong(seq, speed = 140) {
+  stopSong();
   let i = 0;
-  autoplayId = setInterval(() => {
-    if (i >= notes.length) {
-      stopAutoplay();
-      return;
-    }
-    const note = notes[i].trim();
+  interval = setInterval(() => {
+    if (i >= seq.length) { stopSong(); return; }
+    let note = seq[i].replace(/[\[\]]/g,"").trim();
     if (!note) { i++; return; }
 
-    const base = note.slice(0, -1).replace("#","s"); // C# → Cs pour simplicité
-    const oct = parseInt(note.slice(-1));
-    const nidx = noteNames.indexOf(base) + (oct - START_OCTAVE) * 12;
+    // Très simple parser Roblox-like
+    const letter = note[0].toUpperCase();
+    const oct = note.length > 1 ? parseInt(note[1]) : 5;
+    const baseIdx = "ASDFGHJKL;']QWERTYUIOP".indexOf(letter);
+    if (baseIdx === -1) { i++; return; }
 
-    if (nidx >= 0 && nidx < keys.length) {
-      playNote(getFreq(nidx), 0.5, 0.9);
-      keys[nidx].classList.add("pressed");
-      setTimeout(() => keys[nidx].classList.remove("pressed"), 120);
-    }
+    const idx = baseIdx + (oct - 3) * 12; // approx C3 base
+    if (idx >= 0 && idx < keys.length) playAndGlow(idx);
     i++;
-  }, delay);
+  }, speed);
 }
 
-function stopAutoplay() {
-  if (autoplayId) clearInterval(autoplayId);
-  autoplayId = null;
+function stopSong() {
+  if (interval) clearInterval(interval);
+  interval = null;
 }
 
-// Démo random ou chanson
-document.getElementById("playDemo").onclick = () => {
-  const seq = [];
-  for (let i = 0; i < 40; i++) seq.push(Math.floor(Math.random() * keys.length));
-  playSequence(seq.map(i => noteNames[i%12] + (Math.floor(i/12)+START_OCTAVE)), 140);
+document.getElementById("playBtn").onclick = () => {
+  const sel = document.getElementById("song").value;
+  if (songs[sel]) playSong(songs[sel], sel === "rushe" ? 110 : 150);
 };
 
-document.getElementById("stopDemo").onclick = stopAutoplay;
+document.getElementById("stopBtn").onclick = stopSong;
 
-document.getElementById("songSelect").onchange = e => {
-  const val = e.target.value;
-  if (songs[val]) playSequence(songs[val], 160);
-};
-
-document.getElementById("playSheet").onclick = () => {
-  const text = document.getElementById("sheet").value.trim();
+document.getElementById("playCustom").onclick = () => {
+  const text = document.getElementById("customSheet").value.trim();
   if (!text) return;
-  const notes = text.split(/[\s,]+/);
-  playSequence(notes, 150);
+  const seq = text.split(/\s+/);
+  playSong(seq, 140);
 };
 
 </script>
