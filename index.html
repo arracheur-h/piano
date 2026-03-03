@@ -3,599 +3,544 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Piano</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Space+Mono&display=swap" rel="stylesheet">
+<title>Piano RGB</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --gold: #c9a84c;
-    --gold-light: #e8c97a;
-    --cream: #f5f0e8;
-    --shadow-key: rgba(0,0,0,0.7);
-  }
+:root { --bg: #050508; }
 
-  body {
-    background: var(--bg);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Space Mono', monospace;
-    overflow: hidden;
-  }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
-  /* Ambient glow */
-  body::before {
-    content: '';
-    position: fixed;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
+#bgGlow {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  background: none;
+  transition: background 0.12s;
+}
 
-  h1 {
-    font-family: 'Playfair Display', serif;
-    color: var(--gold);
-    font-size: clamp(1.8rem, 4vw, 3rem);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 0.3em;
-    text-shadow: 0 0 40px rgba(201,168,76,0.4);
-  }
+.topbar {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; gap: 28px;
+  margin-bottom: 14px;
+}
 
-  .subtitle {
-    color: rgba(201,168,76,0.5);
-    font-size: 0.7rem;
-    letter-spacing: 0.3em;
-    margin-bottom: 2.5rem;
-    text-transform: uppercase;
-  }
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900; font-size: 1.5rem;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: #fff; transition: color 0.08s, text-shadow 0.08s;
+}
 
-  /* Piano body */
-  .piano-wrap {
-    background: linear-gradient(160deg, #1e1812 0%, #0d0b08 100%);
-    border: 1px solid rgba(201,168,76,0.2);
-    border-radius: 12px 12px 20px 20px;
-    padding: 28px 28px 36px;
-    box-shadow:
-      0 0 0 1px rgba(201,168,76,0.05),
-      0 30px 80px rgba(0,0,0,0.8),
-      inset 0 1px 0 rgba(201,168,76,0.15);
-    position: relative;
-  }
+.note-display {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.2rem; font-weight: 700;
+  letter-spacing: 0.15em; min-width: 70px; text-align: center;
+  color: rgba(255,255,255,0.3);
+  transition: color 0.05s, text-shadow 0.05s;
+}
 
-  .piano-wrap::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 12px; right: 12px; height: 3px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    border-radius: 2px;
-    opacity: 0.6;
-  }
+#viz {
+  position: relative; z-index: 10;
+  display: block; margin-bottom: 12px;
+  border-radius: 6px;
+}
 
-  /* Keys container */
-  .keys {
-    display: flex;
-    position: relative;
-    height: 200px;
-    gap: 2px;
-  }
+.piano-wrap {
+  position: relative; z-index: 10;
+  background: linear-gradient(180deg, #111118 0%, #090910 100%);
+  border-radius: 14px 14px 22px 22px;
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 16px 22px 28px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+  overflow-x: auto; max-width: 98vw;
+}
 
-  /* White keys */
-  .key-white {
-    width: 52px;
-    height: 200px;
-    background: linear-gradient(180deg, #f8f4ed 0%, #ede8df 100%);
-    border-radius: 0 0 8px 8px;
-    border: 1px solid #c8bfb0;
-    border-top: none;
-    cursor: pointer;
-    position: relative;
-    transition: background 0.05s, transform 0.05s, box-shadow 0.05s;
-    box-shadow:
-      0 6px 0 #b8ad9e,
-      0 8px 12px rgba(0,0,0,0.4),
-      inset 0 -3px 6px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    padding-bottom: 14px;
-    user-select: none;
-  }
+.rgb-strip {
+  height: 3px; border-radius: 2px; margin-bottom: 14px;
+  background: linear-gradient(90deg,#f00,#ff7700,#ff0,#0f0,#0ff,#07f,#f0f,#f00);
+  background-size: 200% 100%;
+  animation: rainbow 3s linear infinite;
+}
+@keyframes rainbow { to { background-position: 200% 0; } }
 
-  .key-white:hover {
-    background: linear-gradient(180deg, #fffdf8 0%, #f5efe4 100%);
-  }
+.keys {
+  position: relative;
+  height: 180px;
+  flex-shrink: 0;
+}
 
-  .key-white.active {
-    background: linear-gradient(180deg, #e8c97a 0%, #c9a84c 100%);
-    transform: translateY(4px);
-    box-shadow:
-      0 2px 0 #a08030,
-      0 4px 8px rgba(0,0,0,0.4),
-      inset 0 2px 4px rgba(0,0,0,0.1);
-  }
+.key-white {
+  width: 36px; height: 180px;
+  background: linear-gradient(180deg, #f0ece2 0%, #ddd7cc 100%);
+  border-radius: 0 0 7px 7px;
+  border: 1px solid #b0a898; border-top: none;
+  cursor: pointer; position: absolute;
+  box-shadow: 0 5px 0 #9a9080, 0 7px 14px rgba(0,0,0,0.45), inset 0 -2px 4px rgba(0,0,0,0.05);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding-bottom: 9px; user-select: none;
+  transition: background 0.04s, box-shadow 0.04s, transform 0.04s;
+}
+.key-white:hover { background: linear-gradient(180deg, #fffdf7 0%, #eee8db 100%); }
+.key-white.active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #6a6050, 0 3px 8px rgba(0,0,0,0.5), inset 0 2px 6px rgba(0,0,0,0.12);
+}
 
-  /* Black keys */
-  .key-black {
-    width: 34px;
-    height: 120px;
-    background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 60%, #1a1610 100%);
-    border-radius: 0 0 6px 6px;
-    position: absolute;
-    top: 0;
-    z-index: 2;
-    cursor: pointer;
-    transition: background 0.05s, transform 0.05s, box-shadow 0.05s;
-    box-shadow:
-      0 8px 0 #000,
-      0 10px 16px rgba(0,0,0,0.8),
-      inset 0 -2px 4px rgba(255,255,255,0.03);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    padding-bottom: 10px;
-    user-select: none;
-  }
+.key-black {
+  width: 24px; height: 110px;
+  background: linear-gradient(180deg, #1c1c1c 0%, #080808 70%, #111 100%);
+  border-radius: 0 0 5px 5px;
+  position: absolute; top: 0; z-index: 2; cursor: pointer;
+  box-shadow: 0 6px 0 #000, 0 8px 14px rgba(0,0,0,0.9), inset 0 -1px 3px rgba(255,255,255,0.04);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding-bottom: 7px; user-select: none;
+  transition: background 0.04s, box-shadow 0.04s, transform 0.04s;
+}
+.key-black:hover { background: linear-gradient(180deg, #2e2e2e 0%, #141414 70%, #1a1a1a 100%); }
+.key-black.active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 #000, 0 4px 8px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.3);
+}
 
-  .key-black:hover {
-    background: linear-gradient(180deg, #2a2a2a 0%, #111 60%, #221e12 100%);
-  }
+.key-note {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.42rem; margin-bottom: 3px; opacity: 0.45;
+}
+.key-kbd { font-size: 0.48rem; letter-spacing: 0.02em; text-transform: uppercase; }
+.key-white .key-note { color: rgba(0,0,0,0.4); }
+.key-white .key-kbd  { color: rgba(0,0,0,0.3); }
+.key-black .key-note { color: rgba(255,255,255,0.3); }
+.key-black .key-kbd  { color: rgba(255,255,255,0.25); }
 
-  .key-black.active {
-    background: linear-gradient(180deg, #c9a84c 0%, #8a6e28 100%);
-    transform: translateY(4px);
-    box-shadow:
-      0 4px 0 #000,
-      0 6px 10px rgba(0,0,0,0.7),
-      inset 0 2px 4px rgba(0,0,0,0.2);
-  }
+.octave-strip {
+  display: flex; justify-content: center; gap: 5px; margin-top: 12px;
+}
+.octave-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer; transition: all 0.2s;
+}
+.octave-dot.active { background: #fff; box-shadow: 0 0 10px #fff; }
 
-  /* Key labels */
-  .key-label {
-    font-size: 0.6rem;
-    letter-spacing: 0.05em;
-    opacity: 0.5;
-    line-height: 1;
-  }
+.controls {
+  position: relative; z-index: 10;
+  display: flex; gap: 16px; margin-top: 12px;
+  color: rgba(255,255,255,0.22); font-size: 0.58rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  flex-wrap: wrap; justify-content: center;
+}
+.k {
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 3px; padding: 1px 5px;
+  color: rgba(255,255,255,0.35); font-size: 0.62rem; margin: 0 1px;
+}
 
-  .key-white .key-label {
-    color: #3a3228;
-    font-size: 0.55rem;
-  }
-
-  .key-black .key-label {
-    color: rgba(255,255,255,0.4);
-    font-size: 0.5rem;
-  }
-
-  .note-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 0.75rem;
-    margin-bottom: 4px;
-    opacity: 0.6;
-    font-style: italic;
-  }
-
-  .key-white .note-name { color: #5a4e42; }
-  .key-black .note-name { color: rgba(255,255,255,0.3); }
-
-  /* Note display */
-  .note-display {
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    margin-bottom: 1.5rem;
-  }
-
-  .note-bubble {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.8rem;
-    color: var(--gold);
-    text-shadow: 0 0 20px rgba(201,168,76,0.6);
-    transition: all 0.1s;
-    opacity: 0;
-    transform: translateY(8px);
-    min-width: 60px;
-    text-align: center;
-  }
-
-  .note-bubble.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* Ripple rings */
-  @keyframes ring {
-    0% { transform: scale(0.8); opacity: 0.8; }
-    100% { transform: scale(2.5); opacity: 0; }
-  }
-
-  .ring {
-    position: absolute;
-    border: 1px solid var(--gold);
-    border-radius: 50%;
-    width: 40px; height: 40px;
-    pointer-events: none;
-    animation: ring 0.6s ease-out forwards;
-  }
-
-  /* Octave info */
-  .octave-strip {
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    margin-top: 12px;
-  }
-
-  .octave-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: rgba(201,168,76,0.2);
-    border: 1px solid rgba(201,168,76,0.3);
-    transition: background 0.2s;
-  }
-
-  .octave-dot.active {
-    background: var(--gold);
-    box-shadow: 0 0 8px rgba(201,168,76,0.6);
-  }
-
-  /* Controls bar */
-  .controls {
-    display: flex;
-    gap: 20px;
-    margin-top: 16px;
-    justify-content: center;
-    align-items: center;
-    color: rgba(201,168,76,0.4);
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-  }
-
-  .controls span { text-transform: uppercase; }
-  .ctrl-key {
-    display: inline-block;
-    border: 1px solid rgba(201,168,76,0.3);
-    border-radius: 4px;
-    padding: 2px 6px;
-    color: rgba(201,168,76,0.6);
-    font-size: 0.7rem;
-    margin: 0 2px;
-  }
-
-  /* Waveform visualizer */
-  canvas#viz {
-    display: block;
-    margin: 0 auto 1.5rem;
-    opacity: 0.6;
-  }
+/* Particles */
+.particle {
+  position: fixed; border-radius: 50%; pointer-events: none; z-index: 20;
+  animation: pfly 0.7s ease-out forwards;
+}
+@keyframes pfly {
+  0%   { opacity: 1; transform: scale(1) translate(0,0); }
+  100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)); }
+}
 </style>
 </head>
 <body>
+<div id="bgGlow"></div>
 
-<h1>Piano</h1>
-<p class="subtitle">Jouez avec votre clavier</p>
-
-<canvas id="viz" width="400" height="40"></canvas>
-
-<div class="note-display">
-  <div class="note-bubble" id="noteDisplay">–</div>
+<div class="topbar">
+  <h1 id="title">Piano</h1>
+  <div class="note-display" id="noteDisp">—</div>
 </div>
 
+<canvas id="viz" width="680" height="42"></canvas>
+
 <div class="piano-wrap">
+  <div class="rgb-strip"></div>
   <div class="keys" id="keys"></div>
-  <div class="octave-strip" id="octaveDots"></div>
+  <div class="octave-strip" id="dots"></div>
 </div>
 
 <div class="controls">
-  <span><span class="ctrl-key">Z</span>→<span class="ctrl-key">.</span> jouer</span>
-  <span><span class="ctrl-key">↑</span><span class="ctrl-key">↓</span> octave</span>
+  <span>Toutes les touches du clavier</span>
+  <span><span class="k">↑</span><span class="k">↓</span> octave</span>
+  <span><span class="k">0</span>–<span class="k">8</span> octave direct</span>
 </div>
 
 <script>
-// AudioContext
-const ctx = new (window.AudioContext || window.webkitAudioContext)();
-const masterGain = ctx.createGain();
-const analyser = ctx.createAnalyser();
-analyser.fftSize = 256;
-masterGain.gain.value = 0.5;
-masterGain.connect(analyser);
-analyser.connect(ctx.destination);
+// ══════════════════════════════════════════
+//  AUDIO
+// ══════════════════════════════════════════
+const actx = new (window.AudioContext || window.webkitAudioContext)();
+const master = actx.createGain();
+const analyser = actx.createAnalyser();
+analyser.fftSize = 512;
+master.gain.value = 0.4;
+master.connect(analyser);
+analyser.connect(actx.destination);
 
-// Notes layout: white/black pattern for one octave
-const octaveNotes = [
-  { note: 'C',  semitone: 0,  black: false },
-  { note: 'C#', semitone: 1,  black: true  },
-  { note: 'D',  semitone: 2,  black: false },
-  { note: 'D#', semitone: 3,  black: true  },
-  { note: 'E',  semitone: 4,  black: false },
-  { note: 'F',  semitone: 5,  black: false },
-  { note: 'F#', semitone: 6,  black: true  },
-  { note: 'G',  semitone: 7,  black: false },
-  { note: 'G#', semitone: 8,  black: true  },
-  { note: 'A',  semitone: 9,  black: false },
-  { note: 'A#', semitone: 10, black: true  },
-  { note: 'B',  semitone: 11, black: false },
+function freq(semi) {
+  return 261.63 * Math.pow(2, semi / 12); // C4 = 0
+}
+
+// Each call creates a brand new oscillator → rapid notes always work
+function playNote(semi) {
+  if (actx.state === 'suspended') actx.resume();
+  const f = freq(semi);
+  const t = actx.currentTime;
+
+  const osc  = actx.createOscillator();
+  const osc2 = actx.createOscillator();
+  const g1   = actx.createGain();
+  const g2   = actx.createGain();
+
+  osc.type  = 'triangle';
+  osc2.type = 'sine';
+  osc.frequency.value  = f;
+  osc2.frequency.value = f * 2.001;
+
+  g1.gain.setValueAtTime(0, t);
+  g1.gain.linearRampToValueAtTime(0.36, t + 0.007);
+  g1.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+
+  g2.gain.setValueAtTime(0, t);
+  g2.gain.linearRampToValueAtTime(0.09, t + 0.007);
+  g2.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+
+  osc.connect(g1);  g1.connect(master);
+  osc2.connect(g2); g2.connect(master);
+  osc.start(t);  osc2.start(t);
+  osc.stop(t + 2.2); osc2.stop(t + 1.2);
+}
+
+// ══════════════════════════════════════════
+//  KEY → SEMITONE MAP  (AZERTY + all keys)
+//  0 = C of current octave
+// ══════════════════════════════════════════
+// We use e.key (the character, layout-aware) so AZERTY users get correct mapping.
+// Bottom row = octave-1, home row = octave+0, AZERTY row = octave+1, number row = octave+2
+const KEY_MAP = {
+  // ── Bottom row (W X C V B N , ; : ! < >) ── octave - 1
+  '<': -14, 'w': -13, 'x': -12, 'c': -11, 'v': -10, 'b': -9,
+  'n': -8,  ',': -7,  ';': -6,  ':': -5,  '!': -4,
+
+  // ── Home row (Q S D F G H J K L M ù *) ── octave + 0
+  'q': 0,  's': 1,  'd': 2,  'f': 3,  'g': 4,  'h': 5,
+  'j': 6,  'k': 7,  'l': 8,  'm': 9,  'ù': 10, '*': 11,
+
+  // ── AZERTY top row (A Z E R T Y U I O P ^ $) ── octave + 12
+  'a': 12, 'z': 13, 'e': 14, 'r': 15, 't': 16, 'y': 17,
+  'u': 18, 'i': 19, 'o': 20, 'p': 21, '^': 22, '$': 23,
+
+  // ── Number row (& é " ' ( - è _ ç à ) =) ── octave + 24
+  '&': 24, 'é': 25, '"': 26, "'": 27, '(': 28, '-': 29,
+  'è': 30, '_': 31, 'ç': 32, 'à': 33, ')': 34, '=': 35,
+};
+
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+function hsl(h,s=100,l=60) { return `hsl(${h},${s}%,${l}%)`; }
+function semiHue(s) { return (((s % 12) + 12) % 12) * 30; } // 0-330
+
+// Reverse map: semi → kbd label  
+function kbdLabel(semi) {
+  for (const [k, v] of Object.entries(KEY_MAP)) {
+    if (v === semi) return k === ' ' ? 'SP' : k.toUpperCase();
+  }
+  return '';
+}
+
+// ══════════════════════════════════════════
+//  PIANO LAYOUT
+// ══════════════════════════════════════════
+let currentOctave = 4;
+const W = 36, BW = 23, GAP = 2;
+
+const OCT_PATTERN = [
+  { note:'C',  s:0,  black:false },
+  { note:'C#', s:1,  black:true  },
+  { note:'D',  s:2,  black:false },
+  { note:'D#', s:3,  black:true  },
+  { note:'E',  s:4,  black:false },
+  { note:'F',  s:5,  black:false },
+  { note:'F#', s:6,  black:true  },
+  { note:'G',  s:7,  black:false },
+  { note:'G#', s:8,  black:true  },
+  { note:'A',  s:9,  black:false },
+  { note:'A#', s:10, black:true  },
+  { note:'B',  s:11, black:false },
 ];
 
-// Keyboard mapping (two rows = current octave)
-const keyMap = {
-  'a': 0,  'z': 1,  'e': 2,  'r': 3,  't': 4,  'y': 5,  'u': 6,
-  'q': 7,  's': 8,  'd': 9,  'f': 10, 'g': 11,
-  // Second octave
-  'h': 12, 'j': 13, 'k': 14, 'l': 15, 'm': 16,
-  'i': 17, 'o': 18, 'p': 19,
-};
-
-// Also map AZERTY direct
-const keyMapFR = {
-  'a': 0, 'z': 1, 'e': 2, 'r': 3, 't': 4, 'y': 5, 'u': 6,
-  'q': 7, 's': 8, 'd': 9, 'f': 10, 'g': 11,
-  'h': 12, 'j': 13, 'k': 14, 'l': 15, 'm': 16,
-  'i': 17, 'o': 18, 'p': 19,
-};
-
-let currentOctave = 4;
-const MAX_OCTAVES = 7;
-const activeOscillators = {};
-
-function noteToFreq(noteIndex) {
-  // noteIndex relative to C4
-  const base = 261.63; // C4
-  return base * Math.pow(2, noteIndex / 12);
-}
-
-function playNote(noteIndex) {
-  if (activeOscillators[noteIndex]) return;
-  if (ctx.state === 'suspended') ctx.resume();
-
-  const freq = noteToFreq(noteIndex);
-
-  const osc = ctx.createOscillator();
-  const gainNode = ctx.createGain();
-  const osc2 = ctx.createOscillator();
-  const gainNode2 = ctx.createGain();
-
-  osc.type = 'triangle';
-  osc.frequency.value = freq;
-  osc2.type = 'sine';
-  osc2.frequency.value = freq * 2;
-
-  gainNode.gain.setValueAtTime(0, ctx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
-
-  gainNode2.gain.setValueAtTime(0, ctx.currentTime);
-  gainNode2.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.01);
-  gainNode2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
-
-  osc.connect(gainNode);
-  gainNode.connect(masterGain);
-  osc2.connect(gainNode2);
-  gainNode2.connect(masterGain);
-
-  osc.start();
-  osc2.start();
-  osc.stop(ctx.currentTime + 3);
-  osc2.stop(ctx.currentTime + 2);
-
-  activeOscillators[noteIndex] = { osc, osc2, gainNode, gainNode2 };
-
-  osc.onended = () => { delete activeOscillators[noteIndex]; };
-}
-
-function releaseNote(noteIndex) {
-  const a = activeOscillators[noteIndex];
-  if (!a) return;
-  const t = ctx.currentTime;
-  a.gainNode.gain.cancelScheduledValues(t);
-  a.gainNode.gain.setValueAtTime(a.gainNode.gain.value, t);
-  a.gainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-  a.gainNode2.gain.cancelScheduledValues(t);
-  a.gainNode2.gain.setValueAtTime(a.gainNode2.gain.value, t);
-  a.gainNode2.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-}
-
-// Build 2 octaves of keys
 function buildPiano() {
-  const container = document.getElementById('keys');
-  container.innerHTML = '';
+  const el = document.getElementById('keys');
+  el.innerHTML = '';
 
-  const totalOctaves = 2;
-  const whiteKeyWidth = 52;
-  const blackKeyWidth = 34;
-  const gap = 2;
-
-  // Black key offsets within an octave (in white key units)
-  const blackOffsets = { 1: 0.6, 3: 1.6, 6: 3.6, 8: 4.6, 10: 5.6 };
-
-  let whiteIndex = 0;
-  const allNotes = [];
-
-  for (let oct = 0; oct < totalOctaves; oct++) {
-    for (let i = 0; i < octaveNotes.length; i++) {
-      const n = octaveNotes[i];
-      const noteIndex = oct * 12 + i;
-      allNotes.push({ ...n, noteIndex, oct, whiteIndex: n.black ? null : whiteIndex });
-      if (!n.black) whiteIndex++;
+  // Range covers all mapped semitones: -14 to 35
+  const startOct = -2, endOct = 3; // octet offsets
+  const notes = [];
+  for (let oct = startOct; oct < endOct; oct++) {
+    for (const n of OCT_PATTERN) {
+      notes.push({ ...n, semi: oct * 12 + n.s });
     }
   }
 
-  // Container width based on white keys
-  const totalWhite = allNotes.filter(n => !n.black).length;
-  container.style.width = (totalWhite * (whiteKeyWidth + gap) - gap) + 'px';
+  const whites = notes.filter(n => !n.black);
+  const whitePos = {}; // semi → index
+  whites.forEach((n, i) => { whitePos[n.semi] = i; });
 
-  // Render white keys first
-  let wi = 0;
-  allNotes.filter(n => !n.black).forEach((n, idx) => {
-    const el = document.createElement('div');
-    el.className = 'key-white';
-    el.dataset.noteIndex = n.noteIndex;
+  const totalW = whites.length * (W + GAP) - GAP;
+  el.style.width = totalW + 'px';
+  el.style.position = 'relative';
 
-    const noteName = n.note + (currentOctave + n.oct);
-
-    // Keyboard label
-    const kb = getKeyboardLabel(n.noteIndex);
-    el.innerHTML = `
-      <span class="note-name">${n.note}</span>
-      <span class="key-label">${kb}</span>
-    `;
-
-    el.addEventListener('mousedown', () => triggerNote(n.noteIndex, el, noteName));
-    el.addEventListener('mouseup', () => stopNote(n.noteIndex, el));
-    el.addEventListener('mouseleave', () => stopNote(n.noteIndex, el));
-    container.appendChild(el);
+  // White keys
+  whites.forEach(n => {
+    const k = makeKey(n, false);
+    k.style.left = (whitePos[n.semi] * (W + GAP)) + 'px';
+    el.appendChild(k);
   });
 
-  // Render black keys positioned absolutely
-  let whiteCount = 0;
-  allNotes.forEach(n => {
-    if (!n.black) { whiteCount++; return; }
-
-    // Find position: count white keys before this
-    const octaveStart = n.oct * 7; // 7 white keys per octave
-    const semiInOctave = n.semitone;
-    // whites before this black in this octave
-    const whitesBeforeInOct = { 1: 1, 3: 2, 6: 4, 8: 5, 10: 6 }[semiInOctave] || 0;
-    const whitesBefore = n.oct * 7 + whitesBeforeInOct;
-
-    const el = document.createElement('div');
-    el.className = 'key-black';
-    el.dataset.noteIndex = n.noteIndex;
-
-    const noteName = n.note + (currentOctave + n.oct);
-    const kb = getKeyboardLabel(n.noteIndex);
-
-    el.innerHTML = `<span class="key-label">${kb}</span>`;
-
-    const leftPos = whitesBefore * (whiteKeyWidth + gap) - blackKeyWidth / 2 + 8;
-    el.style.left = leftPos + 'px';
-
-    el.addEventListener('mousedown', (e) => { e.stopPropagation(); triggerNote(n.noteIndex, el, noteName); });
-    el.addEventListener('mouseup', () => stopNote(n.noteIndex, el));
-    el.addEventListener('mouseleave', () => stopNote(n.noteIndex, el));
-    container.appendChild(el);
+  // Black keys
+  notes.filter(n => n.black).forEach(n => {
+    const prevIdx = whitePos[n.semi - 1];
+    if (prevIdx === undefined) return;
+    const left = prevIdx * (W + GAP) + W - BW / 2;
+    const k = makeKey(n, true);
+    k.style.left = left + 'px';
+    el.appendChild(k);
   });
 }
 
-function getKeyboardLabel(noteIndex) {
-  const map = {
-    0: 'A', 1: 'Z', 2: 'E', 3: 'R', 4: 'T', 5: 'Y', 6: 'U',
-    7: 'Q', 8: 'S', 9: 'D', 10: 'F', 11: 'G',
-    12: 'H', 13: 'J', 14: 'K', 15: 'L', 16: 'M',
-    17: 'I', 18: 'O', 19: 'P',
-  };
-  return map[noteIndex] || '';
+function makeKey(n, isBlack) {
+  const el = document.createElement('div');
+  el.className = isBlack ? 'key-black' : 'key-white';
+  el.dataset.semi = n.semi;
+  el.style.width  = (isBlack ? BW : W) + 'px';
+  el.style.height = (isBlack ? 110 : 180) + 'px';
+  el.style.zIndex = isBlack ? 2 : 1;
+
+  const lb = kbdLabel(n.semi);
+  el.innerHTML = `<span class="key-note">${n.note}</span><span class="key-kbd">${lb}</span>`;
+
+  el.addEventListener('mousedown', e => { e.stopPropagation(); activate(n.semi); });
+  el.addEventListener('mouseup',   () => deactivate(n.semi));
+  el.addEventListener('mouseleave',() => deactivate(n.semi));
+  return el;
 }
 
-const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-let noteFadeTimer = null;
+// ══════════════════════════════════════════
+//  RGB
+// ══════════════════════════════════════════
+let glowHue = 200, glowAlpha = 0;
 
-function triggerNote(noteIndex, el, noteName) {
-  if (!el.classList.contains('active')) {
-    el.classList.add('active');
-    const absIndex = noteIndex + (currentOctave - 4) * 12;
-    playNote(absIndex);
+function setGlow(hue) {
+  glowHue = hue;
+  glowAlpha = 1;
 
-    // Show note name
-    const display = document.getElementById('noteDisplay');
-    display.textContent = noteName || (noteNames[noteIndex % 12] + (currentOctave + Math.floor(noteIndex/12)));
-    display.classList.add('show');
-    clearTimeout(noteFadeTimer);
-    noteFadeTimer = setTimeout(() => display.classList.remove('show'), 1200);
+  const c = hsl(hue, 100, 65);
+  const cs = `0 0 30px ${hsl(hue,100,65)}, 0 0 60px ${hsl(hue,100,50)}`;
+  document.getElementById('title').style.cssText    = `color:${c};text-shadow:${cs}`;
+  document.getElementById('noteDisp').style.cssText = `color:${c};text-shadow:0 0 20px ${c}`;
+  document.getElementById('bgGlow').style.background =
+    `radial-gradient(ellipse 70% 55% at 50% 50%, ${hsl(hue,80,7)} 0%, transparent 68%)`;
+}
+
+setInterval(() => {
+  glowAlpha *= 0.95;
+  if (glowAlpha < 0.02) {
+    glowAlpha = 0;
+    document.getElementById('bgGlow').style.background = 'none';
+    document.getElementById('title').style.cssText    = 'color:#fff';
+    document.getElementById('noteDisp').style.color   = 'rgba(255,255,255,0.3)';
   }
-}
+}, 40);
 
-function stopNote(noteIndex, el) {
-  if (el.classList.contains('active')) {
-    el.classList.remove('active');
-    const absIndex = noteIndex + (currentOctave - 4) * 12;
-    releaseNote(absIndex);
-  }
-}
+// ══════════════════════════════════════════
+//  ACTIVATE / DEACTIVATE
+// ══════════════════════════════════════════
+const activeSet = new Set();
 
-// Keyboard events
-const pressedKeys = new Set();
+function activate(semi) {
+  const absSemi = semi + (currentOctave - 4) * 12;
+  playNote(absSemi); // ALWAYS plays, no gating
 
-document.addEventListener('keydown', (e) => {
-  if (e.repeat) return;
-  const key = e.key.toLowerCase();
+  const hue = semiHue(semi);
+  setGlow(hue);
 
-  if (e.key === 'ArrowUp') { currentOctave = Math.min(currentOctave + 1, 7); buildPiano(); updateOctaveDots(); return; }
-  if (e.key === 'ArrowDown') { currentOctave = Math.max(currentOctave - 1, 1); buildPiano(); updateOctaveDots(); return; }
+  // Note name
+  const mod = ((semi % 12) + 12) % 12;
+  document.getElementById('noteDisp').textContent = NOTE_NAMES[mod];
 
-  const noteIndex = keyMapFR[key];
-  if (noteIndex === undefined) return;
-
-  pressedKeys.add(key);
-  const el = document.querySelector(`.key-white[data-note-index="${noteIndex}"], .key-black[data-note-index="${noteIndex}"]`);
+  // Visual
+  const el = document.querySelector(`[data-semi="${semi}"]`);
   if (el) {
-    const noteName = noteNames[noteIndex % 12] + (currentOctave + Math.floor(noteIndex / 12));
-    triggerNote(noteIndex, el, noteName);
+    el.classList.add('active');
+    const isBlack = el.classList.contains('key-black');
+    el.style.boxShadow = isBlack
+      ? `0 3px 0 #000, 0 0 20px ${hsl(hue,100,50)}, inset 0 0 14px ${hsl(hue,100,25)}`
+      : `0 1px 0 #666, 0 0 28px ${hsl(hue,100,60)}, inset 0 0 12px ${hsl(hue,80,88)}`;
+    el.style.background = isBlack
+      ? `linear-gradient(180deg, ${hsl(hue,75,18)} 0%, ${hsl(hue,60,6)} 100%)`
+      : `linear-gradient(180deg, #fff 0%, ${hsl(hue,60,85)} 100%)`;
+  }
+
+  particles(el, hue);
+  activeSet.add(semi);
+}
+
+function deactivate(semi) {
+  if (!activeSet.has(semi)) return;
+  activeSet.delete(semi);
+  const el = document.querySelector(`[data-semi="${semi}"]`);
+  if (el) {
+    el.classList.remove('active');
+    el.style.boxShadow = '';
+    el.style.background = '';
+  }
+}
+
+// ══════════════════════════════════════════
+//  PARTICLES
+// ══════════════════════════════════════════
+function particles(el, hue) {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height * 0.25;
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const sz = 3 + Math.random() * 5;
+    p.style.cssText = `
+      left:${cx}px; top:${cy}px; width:${sz}px; height:${sz}px;
+      margin:${-sz/2}px 0 0 ${-sz/2}px;
+      background:hsl(${hue + (Math.random()-.5)*25},100%,65%);
+      box-shadow:0 0 8px hsl(${hue},100%,55%);
+      --dx:${(Math.random()-.5)*70}px; --dy:${-(15+Math.random()*55)}px;
+      animation-duration:${0.45+Math.random()*0.35}s;
+      animation-delay:${Math.random()*0.04}s;
+    `;
+    document.body.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+
+// ══════════════════════════════════════════
+//  KEYBOARD EVENTS
+// ══════════════════════════════════════════
+const codeToSemi = {}; // e.code → semi (for proper keyup)
+
+document.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  const key = e.key;
+
+  if (key === 'ArrowUp')   { currentOctave = Math.min(8, currentOctave+1); buildPiano(); updateDots(); return; }
+  if (key === 'ArrowDown') { currentOctave = Math.max(0, currentOctave-1); buildPiano(); updateDots(); return; }
+  if (key >= '0' && key <= '8') { currentOctave = +key; buildPiano(); updateDots(); return; }
+
+  const semi = KEY_MAP[key] ?? KEY_MAP[key.toLowerCase()];
+  if (semi === undefined) return;
+  e.preventDefault();
+
+  codeToSemi[e.code] = semi;
+  activate(semi);
+});
+
+document.addEventListener('keyup', e => {
+  const semi = codeToSemi[e.code];
+  if (semi !== undefined) {
+    deactivate(semi);
+    delete codeToSemi[e.code];
   }
 });
 
-document.addEventListener('keyup', (e) => {
-  const key = e.key.toLowerCase();
-  pressedKeys.delete(key);
-
-  const noteIndex = keyMapFR[key];
-  if (noteIndex === undefined) return;
-
-  const el = document.querySelector(`.key-white[data-note-index="${noteIndex}"], .key-black[data-note-index="${noteIndex}"]`);
-  if (el) stopNote(noteIndex, el);
-});
-
-// Octave dots
-function updateOctaveDots() {
-  const strip = document.getElementById('octaveDots');
+// ══════════════════════════════════════════
+//  OCTAVE DOTS
+// ══════════════════════════════════════════
+function updateDots() {
+  const strip = document.getElementById('dots');
   strip.innerHTML = '';
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 0; i <= 8; i++) {
     const d = document.createElement('div');
     d.className = 'octave-dot' + (i === currentOctave ? ' active' : '');
+    if (i === currentOctave) d.style.cssText = `background:${hsl(semiHue(0))}; box-shadow:0 0 10px ${hsl(semiHue(0))}`;
+    d.title = `Octave ${i}`;
+    d.addEventListener('click', () => { currentOctave = i; buildPiano(); updateDots(); });
     strip.appendChild(d);
   }
 }
 
-// Visualizer
+// ══════════════════════════════════════════
+//  VISUALIZER
+// ══════════════════════════════════════════
 const canvas = document.getElementById('viz');
-const vctx = canvas.getContext('2d');
-const bufLen = analyser.frequencyBinCount;
-const dataArr = new Uint8Array(bufLen);
+const vc = canvas.getContext('2d');
+const N = analyser.frequencyBinCount;
+const tBuf = new Uint8Array(N);
+const fBuf = new Uint8Array(N);
+let vizHue = 200;
 
 function drawViz() {
   requestAnimationFrame(drawViz);
-  analyser.getByteTimeDomainData(dataArr);
-  vctx.clearRect(0, 0, canvas.width, canvas.height);
+  analyser.getByteTimeDomainData(tBuf);
+  analyser.getByteFrequencyData(fBuf);
 
-  vctx.beginPath();
-  vctx.strokeStyle = 'rgba(201,168,76,0.6)';
-  vctx.lineWidth = 1.5;
+  vizHue += (glowHue - vizHue) * 0.08;
 
-  const slice = canvas.width / bufLen;
+  vc.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Frequency bars (background)
+  const bw = canvas.width / 80;
+  for (let i = 0; i < 80; i++) {
+    const v = fBuf[i] / 255;
+    if (v < 0.04) continue;
+    const bh = v * canvas.height * 0.75;
+    vc.fillStyle = `hsla(${vizHue + i*2},100%,60%,${v * 0.35})`;
+    vc.fillRect(i * bw, canvas.height - bh, bw - 1, bh);
+  }
+
+  // Waveform
+  const g = vc.createLinearGradient(0, 0, canvas.width, 0);
+  g.addColorStop(0,   hsl(vizHue - 25));
+  g.addColorStop(0.5, hsl(vizHue, 100, 75));
+  g.addColorStop(1,   hsl(vizHue + 25));
+
+  vc.beginPath();
+  vc.strokeStyle = g;
+  vc.lineWidth = 2;
+  vc.shadowColor = hsl(vizHue, 100, 60);
+  vc.shadowBlur  = 10;
+
+  const slice = canvas.width / N;
   let x = 0;
-  for (let i = 0; i < bufLen; i++) {
-    const v = dataArr[i] / 128;
-    const y = (v * canvas.height) / 2;
-    i === 0 ? vctx.moveTo(x, y) : vctx.lineTo(x, y);
+  for (let i = 0; i < N; i++) {
+    const v = tBuf[i] / 128;
+    const y = v * canvas.height / 2;
+    i === 0 ? vc.moveTo(x, y) : vc.lineTo(x, y);
     x += slice;
   }
-  vctx.stroke();
+  vc.stroke();
+  vc.shadowBlur = 0;
 }
 
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
 buildPiano();
-updateOctaveDots();
+updateDots();
 drawViz();
 </script>
 </body>
