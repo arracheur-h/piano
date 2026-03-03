@@ -1,655 +1,278 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Virtual Piano</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#06060c;--panel:#0e0e1a;--border:rgba(255,255,255,0.07);--accent:#818cf8;}
-html,body{width:100%;min-height:100vh;background:var(--bg);font-family:'Share Tech Mono',monospace;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;}
-#bgGlow{position:fixed;inset:0;pointer-events:none;z-index:0;transition:background 0.18s;}
-.header{position:relative;z-index:10;width:100%;max-width:1200px;display:flex;align-items:center;justify-content:space-between;padding:12px 20px 0;}
-h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.35em;text-transform:uppercase;color:#fff;transition:color .1s,text-shadow .1s;}
-.note-disp{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;letter-spacing:.1em;min-width:70px;text-align:center;color:rgba(255,255,255,.18);transition:color .05s,text-shadow .05s;}
-#viz{position:relative;z-index:10;display:block;margin:8px auto 6px;border-radius:4px;}
-.piano-wrap{position:relative;z-index:10;background:linear-gradient(180deg,#121220 0%,#0a0a14 100%);border-radius:12px 12px 20px 20px;border:1px solid var(--border);padding:12px 18px 22px;box-shadow:0 40px 100px rgba(0,0,0,.9);max-width:99vw;overflow-x:auto;}
-.rgb-strip{height:3px;border-radius:2px;margin-bottom:10px;background:linear-gradient(90deg,#f00,#f70,#ff0,#0f0,#0ff,#07f,#f0f,#f00);background-size:200% 100%;animation:rain 3s linear infinite;}
-@keyframes rain{to{background-position:200% 0}}
-.keys{position:relative;flex-shrink:0;}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Piano RGB - style Roblox</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #111;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #eee;
+    }
 
-/* ── WHITE KEYS ── */
-.kw{width:36px;height:170px;background:linear-gradient(180deg,#f2ede3 0%,#ddd7cb 100%);border-radius:0 0 7px 7px;border:1px solid #b0a898;border-top:none;cursor:pointer;position:absolute;box-shadow:0 5px 0 #9a9080,0 7px 12px rgba(0,0,0,.4),inset 0 -2px 4px rgba(0,0,0,.05);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px;user-select:none;transition:background .04s,box-shadow .04s,transform .04s;z-index:1;}
-.kw:hover{background:linear-gradient(180deg,#fffef8 0%,#eee8db 100%);}
-.kw.active{transform:translateY(4px);box-shadow:0 1px 0 #6a6050,0 3px 8px rgba(0,0,0,.5),inset 0 2px 6px rgba(0,0,0,.12);}
-/* ── BLACK KEYS ── */
-.kb{width:24px;height:106px;background:linear-gradient(180deg,#1c1c1c 0%,#080808 70%,#111 100%);border-radius:0 0 5px 5px;position:absolute;top:0;z-index:2;cursor:pointer;box-shadow:0 6px 0 #000,0 8px 14px rgba(0,0,0,.9),inset 0 -1px 3px rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:6px;user-select:none;transition:background .04s,box-shadow .04s,transform .04s;}
-.kb:hover{background:linear-gradient(180deg,#2e2e2e 0%,#141414 70%);}
-.kb.active{transform:translateY(3px);box-shadow:0 3px 0 #000,0 4px 8px rgba(0,0,0,.8),inset 0 2px 4px rgba(0,0,0,.3);}
+    h1 {
+      margin: 20px;
+      text-shadow: 0 0 10px #f0f;
+    }
 
-.key-note{font-family:'Orbitron',sans-serif;font-size:.38rem;margin-bottom:2px;opacity:.4;line-height:1;}
-.key-kbd{font-size:.44rem;letter-spacing:.02em;text-transform:uppercase;line-height:1;}
-.kw .key-note{color:rgba(0,0,0,.5);}
-.kw .key-kbd{color:rgba(0,0,0,.3);}
-.kb .key-note{color:rgba(255,255,255,.3);}
-.kb .key-kbd{color:rgba(255,255,255,.2);}
+    .controls {
+      margin: 15px;
+    }
 
-/* ── CONTROLS ── */
-.controls-bar{position:relative;z-index:10;width:100%;max-width:1200px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px 0;}
-.btn{font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:7px 14px;border-radius:6px;cursor:pointer;border:none;transition:all .12s;user-select:none;}
-.btn-play{background:linear-gradient(135deg,#4f46e5,#818cf8);color:#fff;box-shadow:0 0 18px rgba(129,140,248,.4);}
-.btn-play:hover{box-shadow:0 0 28px rgba(129,140,248,.7);transform:translateY(-1px);}
-.btn-play.playing{background:linear-gradient(135deg,#b91c1c,#f87171);box-shadow:0 0 18px rgba(248,113,113,.4);}
-.btn-clear{background:rgba(255,255,255,.05);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.1);}
-.btn-clear:hover{background:rgba(255,255,255,.09);color:rgba(255,255,255,.75);}
-.tempo-wrap{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.3);font-size:.6rem;letter-spacing:.1em;}
-.tempo-wrap input[type=range]{-webkit-appearance:none;appearance:none;width:80px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;outline:none;cursor:pointer;}
-.tempo-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(129,140,248,.6);}
-#tempoVal{color:var(--accent);min-width:32px;display:inline-block;text-align:right;}
-.song-select{background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 9px;font-family:'Share Tech Mono',monospace;font-size:.65rem;cursor:pointer;outline:none;}
-.song-select option{background:#111;}
+    button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      margin: 0 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #444;
+      color: white;
+      transition: 0.3s;
+    }
 
-/* ── SHEET ── */
-.sheet-wrap{position:relative;z-index:10;width:100%;max-width:1200px;padding:10px 20px 18px;}
-.sheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-.sheet-title{font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.28);}
-.sheet-hint{font-size:.55rem;color:rgba(255,255,255,.15);letter-spacing:.07em;}
-#sheet{width:100%;min-height:72px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.72);font-family:'Share Tech Mono',monospace;font-size:.85rem;line-height:1.75;letter-spacing:.07em;padding:10px 12px;resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s;}
-#sheet:focus{border-color:rgba(129,140,248,.4);box-shadow:0 0 0 3px rgba(129,140,248,.08);}
-#sheet::placeholder{color:rgba(255,255,255,.12);}
-.sheet-progress{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;color:rgba(255,255,255,.72);font-family:'Share Tech Mono',monospace;font-size:.85rem;line-height:1.75;letter-spacing:.07em;min-height:72px;word-break:break-all;white-space:pre-wrap;display:none;}
-.played-char{color:rgba(255,255,255,.2);}
-.current-char{background:var(--accent);color:#000;border-radius:2px;padding:0 1px;box-shadow:0 0 8px var(--accent);}
-.unplayed-char{color:rgba(255,255,255,.72);}
+    button:hover { background: #666; }
+    button.active { background: #e91e63; box-shadow: 0 0 15px #e91e63; }
 
-/* ── PARTICLES ── */
-.particle{position:fixed;border-radius:50%;pointer-events:none;z-index:20;animation:pfx .7s ease-out forwards;}
-@keyframes pfx{0%{opacity:1;transform:scale(1) translate(0,0);}100%{opacity:0;transform:scale(0) translate(var(--dx),var(--dy));}}
-</style>
+    .piano {
+      display: flex;
+      position: relative;
+      margin: 20px auto;
+      user-select: none;
+    }
+
+    .key {
+      position: relative;
+      border: 1px solid #222;
+      box-sizing: border-box;
+      transition: all 0.08s ease;
+      border-radius: 0 0 8px 8px;
+      overflow: hidden;
+    }
+
+    .white {
+      width: 60px;
+      height: 240px;
+      background: linear-gradient(#fff 0%, #eee 50%, #ddd 100%);
+      z-index: 1;
+    }
+
+    .black {
+      width: 40px;
+      height: 150px;
+      background: #000;
+      margin: 0 -20px;
+      z-index: 2;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .key:active,
+    .key.active {
+      transform: translateY(6px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+    }
+
+    /* Effet RGB glow */
+    .key.glow-white::after,
+    .key.glow-black::after {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(45deg, #ff00cc, #3333ff, #00ffcc, #ffcc00, #ff3300, #cc00ff, #00ccff);
+      background-size: 400%;
+      filter: blur(12px);
+      animation: rainbow 3s linear infinite;
+      opacity: 0.9;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .key.glow-white::before,
+    .key.glow-black::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.15);
+      z-index: -1;
+    }
+
+    @keyframes rainbow {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 400% 50%; }
+    }
+
+    /* Joue plus fort le glow sur black keys */
+    .key.glow-black::after { filter: blur(16px); opacity: 1; }
+  </style>
 </head>
 <body>
-<div id="bgGlow"></div>
-<div class="header">
-  <h1 id="title">Virtual Piano</h1>
-  <div class="note-disp" id="noteDisp">—</div>
-</div>
-<canvas id="viz" width="860" height="38"></canvas>
-<div class="piano-wrap">
-  <div class="rgb-strip"></div>
-  <div class="keys" id="keys"></div>
-</div>
-<div class="controls-bar">
-  <button class="btn btn-play" id="btnPlay">▶ Auto Play</button>
-  <button class="btn btn-clear" id="btnClear">✕ Vider</button>
-  <select class="song-select" id="songSelect">
-    <option value="">── Choisir une chanson ──</option>
-    <option value="interstellar">🌌 Interstellar – Hans Zimmer</option>
-    <option value="gojo">⚡ Hollow Purple – JJK (Gojo)</option>
-    <option value="indila">🌹 Dernière Danse – Indila</option>
-    <option value="megalovania">💀 Megalovania – Undertale</option>
-    <option value="happybday">🎂 Joyeux Anniversaire</option>
-    <option value="twinkle">⭐ Twinkle Twinkle</option>
-  </select>
-  <div class="tempo-wrap">
-    TEMPO <input type="range" id="tempo" min="40" max="280" value="110">
-    <span id="tempoVal">110</span> BPM
+
+  <h1>Piano RGB 🔥</h1>
+
+  <div class="controls">
+    <button id="playBtn">Jouer la démo (autoplay)</button>
+    <button id="stopBtn">Stop</button>
   </div>
-</div>
-<div class="sheet-wrap">
-  <div class="sheet-header">
-    <span class="sheet-title">📄 Partition</span>
-    <span class="sheet-hint">[ ] = accord · espace = pause · lettres = notes</span>
-  </div>
-  <textarea id="sheet" rows="4" placeholder="Écris ou colle une partition Virtual Piano… ex: t y u [qi] [wo] e r t"></textarea>
-  <div class="sheet-progress" id="sheetProg"></div>
-</div>
 
-<script>
-// ═══════════════════════════════════════════════
-// VIRTUAL PIANO — Standard QWERTY layout
-// The canonical mapping used by virtualpiano.net
-// and Roblox piano sheets
-// ═══════════════════════════════════════════════
+  <div class="piano" id="piano"></div>
 
-// Key → semitone from C4 (middle C = 0)
-// This is the EXACT virtualpiano.net mapping:
-// 3 full octaves: C3(−12) to B5(+23)
-// White: 1 q 2 w 3 e r 4 t 5 y u 6 i 7 o 8 p a 9 s z 0 x c d v g b h f n j m
-// Black (shift): ! @ # $ % ^ & * ( )
-const VP = {
-  // ─ Octave 3 (C3 = −12) ─
-  '1':−12, '!':−11,
-  'q':−10, '@':−9,
-  'w':−8,  '#':−7,
-  'e':−6,
-  'r':−5,  '$':−4,
-  't':−3,  '%':−2,
-  'y':−1,
-  'u': 0,  '^': 1,
-  'i': 2,  '&': 3,
-  'o': 4,
-  'p': 5,  '*': 6,
-  // ─ Octave 4 (C4 = 0 => A4=9 etc.) ─
-  'a': 7,  '(': 8,
-  's': 9,  ')':10,
-  'z':11,
-  'x':12,  'X':13,
-  'c':14,  'C':15,
-  'v':16,
-  'b':17,  'B':18,
-  'n':19,  'N':20,
-  'm':21,  'M':22,
-  // ─ Octave 5 ─
-  'k':23,  'K':24,
-  'l':25,  'L':26,
-  // extras used in sheets
-  'd':−3,  'D':−2,   // d = same as t, alternate notation
-  'f':−6,  'F':−5,   // f alternate
-  'g':−10, 'G':−9,
-  'h':−8,  'H':−7,
-  'j':−5,  'J':−4,
-};
+  <script>
+    // Notes de base (C4 → C5)
+    const baseNotes = [
+      "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C5"
+    ];
 
-// Re-map for physical keyboard (QWERTY e.key)
-// This is the same but we also handle uppercase shift variants
-const KEY_IN = {...VP};
-// Extra QWERTY physical key corrections
-Object.assign(KEY_IN, {
-  'd':−3,'D':−2,
-  'f':−1,'F': 0,  // f → y note area
-  'g': 1,'G': 2,
-  'h': 3,'H': 4,
-  'j': 5,'J': 6,
-});
+    // Mapping clavier ordinateur → index note
+    const keyMap = {
+      "a": 0,  // C
+      "z": 1,  // C#
+      "s": 2,  // D
+      "e": 3,  // D#
+      "d": 4,  // E
+      "f": 5,  // F
+      "t": 6,  // F#
+      "g": 7,  // G
+      "y": 8,  // G#
+      "h": 9,  // A
+      "u":10,  // A#
+      "j":11,  // B
+      "k":12,  // C5
 
-// Standard VP layout for visual piano (3 octaves)
-// We use a fixed note range C3 to C6: semitones −12 to 24
-const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-function semiName(s){const m=((s%12)+12)%12;const o=4+Math.floor(s/12);return NOTE_NAMES[m]+o;}
-function semiHue(s){return(((s%12)+12)%12)*30;}
-function hsl(h,s=100,l=60){return `hsl(${h},${s}%,${l}%)`;}
+      "q": 0, "2": 1, "w": 2, "3": 3, "e": 4,
+      "r": 5, "5": 6, "t": 7, "6": 8, "y": 9,
+      "7":10, "u":11, "i":12
+    };
 
-// ═══════════════════════════════════════════════
-// AUDIO — soft piano timbre using Web Audio API
-// Key: gentle attack, use BiquadFilter to soften
-// ═══════════════════════════════════════════════
-const actx = new (window.AudioContext||window.webkitAudioContext)();
-const masterGain = actx.createGain();
-masterGain.gain.value = 0.28;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// Soft lowpass filter — removes harsh highs
-const lpf = actx.createBiquadFilter();
-lpf.type = 'lowpass';
-lpf.frequency.value = 3200;
-lpf.Q.value = 0.5;
+    function playNote(freq, duration = 0.6) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
 
-// Reverb (convolver) for warmth — we simulate with delay+feedback
-const convGain = actx.createGain();
-convGain.gain.value = 0.18;
-const delay = actx.createDelay(0.4);
-delay.delayTime.value = 0.22;
-const fbGain = actx.createGain();
-fbGain.gain.value = 0.28;
-delay.connect(fbGain);
-fbGain.connect(delay);
-masterGain.connect(lpf);
-lpf.connect(actx.destination);
-lpf.connect(delay);
-delay.connect(convGain);
-convGain.connect(actx.destination);
+      osc.type = "sawtooth"; // ou "square", "sine", "triangle"
+      osc.frequency.value = freq;
 
-const analyser = actx.createAnalyser();
-analyser.fftSize = 512;
-lpf.connect(analyser);
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
-function playNote(semi) {
-  if (actx.state === 'suspended') actx.resume();
-  const freq = 261.63 * Math.pow(2, semi / 12);
-  const t = actx.currentTime;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
 
-  // Soft piano: sine fundamental + gentle harmonics + quick attack
-  const g = actx.createGain();
-  g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(0.55, t + 0.012);   // gentle attack
-  g.gain.exponentialRampToValueAtTime(0.18, t + 0.25); // quick decay
-  g.gain.exponentialRampToValueAtTime(0.001, t + 3.5); // long sustain fade
-
-  const o1 = actx.createOscillator(); // fundamental (sine = mellow)
-  o1.type = 'sine';
-  o1.frequency.value = freq;
-
-  const o2 = actx.createOscillator(); // 2nd harmonic (soft)
-  const g2 = actx.createGain(); g2.gain.value = 0.18;
-  o2.type = 'sine';
-  o2.frequency.value = freq * 2;
-
-  const o3 = actx.createOscillator(); // 3rd harmonic (very soft)
-  const g3 = actx.createGain(); g3.gain.value = 0.06;
-  o3.type = 'sine';
-  o3.frequency.value = freq * 3;
-
-  // Tiny detune for warmth
-  o1.detune.value = (Math.random() - 0.5) * 3;
-
-  o1.connect(g);
-  o2.connect(g2); g2.connect(g);
-  o3.connect(g3); g3.connect(g);
-  g.connect(masterGain);
-
-  o1.start(t); o2.start(t); o3.start(t);
-  o1.stop(t + 4); o2.stop(t + 3); o3.stop(t + 2);
-}
-
-// ═══════════════════════════════════════════════
-// PIANO LAYOUT — 3 octaves, C3 to B5+
-// Matching the standard Virtual Piano keyboard
-// ═══════════════════════════════════════════════
-const OCT = [
-  {note:'C', s:0, b:false},{note:'C#',s:1, b:true},
-  {note:'D', s:2, b:false},{note:'D#',s:3, b:true},
-  {note:'E', s:4, b:false},{note:'F', s:5, b:false},
-  {note:'F#',s:6, b:true}, {note:'G', s:7, b:false},
-  {note:'G#',s:8, b:true}, {note:'A', s:9, b:false},
-  {note:'A#',s:10,b:true}, {note:'B', s:11,b:false},
-];
-
-// Reverse VP map: semitone → display label
-function vpLabel(semi) {
-  const labels = {
-    '-12':'1', '-11':'!', '-10':'Q', '-9':'@', '-8':'W', '-7':'#',
-    '-6':'E', '-5':'R', '-4':'$', '-3':'T', '-2':'%', '-1':'Y',
-    '0':'U', '1':'^', '2':'I', '3':'&', '4':'O', '5':'P', '6':'*',
-    '7':'A', '8':'(', '9':'S', '10':')', '11':'Z',
-    '12':'X', '13':'X↑','14':'C', '15':'C↑','16':'V',
-    '17':'B', '18':'B↑','19':'N', '20':'N↑','21':'M', '22':'M↑',
-    '23':'K', '24':'K↑','25':'L', '26':'L↑',
-  };
-  return labels[String(semi)] || '';
-}
-
-const W=34, BW=22, GAP=2;
-
-function buildPiano() {
-  const el = document.getElementById('keys');
-  el.innerHTML = '';
-  // Range C3(−12) to B5(+23) = 3 octaves
-  const notes = [];
-  for (let oct = -1; oct <= 1; oct++) {
-    for (const n of OCT) {
-      notes.push({...n, semi: oct*12 + n.s});
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
     }
-  }
-  // Also add C6 (+24)
-  notes.push({note:'C', s:0, b:false, semi:24});
 
-  const whites = notes.filter(n => !n.b);
-  const wpos = {}; whites.forEach((n,i) => { wpos[n.semi] = i; });
-  const totalW = whites.length * (W+GAP) - GAP;
-  el.style.width = totalW + 'px';
-  el.style.height = '170px';
-  el.style.position = 'relative';
+    // Fréquences approximatives (C4 → C5)
+    const frequencies = [
+      261.63, 277.18, 293.66, 311.13, 329.63, 349.23,
+      369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25
+    ];
 
-  whites.forEach(n => {
-    const k = makeKey(n, false);
-    k.style.left = (wpos[n.semi]*(W+GAP)) + 'px';
-    el.appendChild(k);
-  });
-  notes.filter(n => n.b).forEach(n => {
-    const prev = wpos[n.semi - 1];
-    if (prev === undefined) return;
-    const k = makeKey(n, true);
-    k.style.left = (prev*(W+GAP) + W - BW/2) + 'px';
-    el.appendChild(k);
-  });
-}
+    // Création des touches
+    const piano = document.getElementById("piano");
 
-function makeKey(n, isBlack) {
-  const el = document.createElement('div');
-  el.className = isBlack ? 'kb' : 'kw';
-  el.dataset.semi = n.semi;
-  el.style.width = (isBlack ? BW : W) + 'px';
-  el.style.height = (isBlack ? 106 : 170) + 'px';
-  const lb = vpLabel(n.semi);
-  el.innerHTML = `<span class="key-note">${n.note}</span><span class="key-kbd">${lb}</span>`;
-  el.addEventListener('mousedown', e => { e.stopPropagation(); activate(n.semi); });
-  el.addEventListener('mouseup', () => deactivate(n.semi));
-  el.addEventListener('mouseleave', () => deactivate(n.semi));
-  return el;
-}
+    for (let i = 0; i < 13; i++) {
+      const key = document.createElement("div");
+      key.classList.add("key");
+      key.dataset.index = i;
 
-// ═══════════════════════════════════════════════
-// RGB SYSTEM
-// ═══════════════════════════════════════════════
-let glowHue = 240, glowAlpha = 0;
-
-function setGlow(hue) {
-  glowHue = hue; glowAlpha = 1;
-  const c = hsl(hue, 100, 65);
-  const sh = `0 0 28px ${hsl(hue,100,65)},0 0 55px ${hsl(hue,100,45)}`;
-  document.getElementById('title').style.cssText = `color:${c};text-shadow:${sh}`;
-  document.getElementById('noteDisp').style.cssText = `color:${c};text-shadow:0 0 16px ${c}`;
-  document.getElementById('bgGlow').style.background =
-    `radial-gradient(ellipse 60% 50% at 50% 35%,${hsl(hue,80,7)} 0%,transparent 68%)`;
-}
-
-setInterval(() => {
-  glowAlpha *= 0.93;
-  if (glowAlpha < 0.01) {
-    glowAlpha = 0;
-    document.getElementById('bgGlow').style.background = 'none';
-    document.getElementById('title').style.cssText = 'color:#fff;text-shadow:0 0 20px rgba(129,140,248,.3)';
-    document.getElementById('noteDisp').style.color = 'rgba(255,255,255,.18)';
-  }
-}, 40);
-
-const activeSet = new Set();
-
-function activate(semi) {
-  playNote(semi);
-  const hue = semiHue(semi);
-  setGlow(hue);
-  document.getElementById('noteDisp').textContent = semiName(semi);
-  const el = document.querySelector(`[data-semi="${semi}"]`);
-  if (el) {
-    el.classList.add('active');
-    const ib = el.classList.contains('kb');
-    el.style.boxShadow = ib
-      ? `0 3px 0 #000,0 0 20px ${hsl(hue,100,50)},inset 0 0 12px ${hsl(hue,100,20)}`
-      : `0 1px 0 #777,0 0 26px ${hsl(hue,100,62)},inset 0 0 10px ${hsl(hue,70,90)}`;
-    el.style.background = ib
-      ? `linear-gradient(180deg,${hsl(hue,80,18)} 0%,${hsl(hue,60,6)} 100%)`
-      : `linear-gradient(180deg,#fff 0%,${hsl(hue,55,86)} 100%)`;
-  }
-  particles(el, hue);
-  activeSet.add(semi);
-}
-
-function deactivate(semi) {
-  if (!activeSet.has(semi)) return;
-  activeSet.delete(semi);
-  const el = document.querySelector(`[data-semi="${semi}"]`);
-  if (el) { el.classList.remove('active'); el.style.boxShadow=''; el.style.background=''; }
-}
-
-function particles(el, hue) {
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  const cx = r.left + r.width/2, cy = r.top + r.height*0.2;
-  for (let i = 0; i < 5; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const sz = 3 + Math.random()*4;
-    p.style.cssText=`left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;margin:${-sz/2}px 0 0 ${-sz/2}px;background:hsl(${hue+(Math.random()-.5)*22},100%,65%);box-shadow:0 0 7px hsl(${hue},100%,55%);--dx:${(Math.random()-.5)*55}px;--dy:${-(10+Math.random()*48)}px;animation-duration:${.4+Math.random()*.3}s;animation-delay:${Math.random()*.04}s;`;
-    document.body.appendChild(p);
-    p.addEventListener('animationend', () => p.remove());
-  }
-}
-
-// ═══════════════════════════════════════════════
-// KEYBOARD INPUT
-// ═══════════════════════════════════════════════
-const codeMap = {};
-document.addEventListener('keydown', e => {
-  if (e.repeat) return;
-  if (e.target === document.getElementById('sheet')) return;
-  const key = e.shiftKey ? e.key : e.key.toLowerCase();
-  let semi = VP[e.key] ?? VP[key];
-  if (semi === undefined) return;
-  e.preventDefault();
-  codeMap[e.code + (e.shiftKey?'S':'')] = semi;
-  activate(semi);
-});
-document.addEventListener('keyup', e => {
-  const k = e.code + (e.shiftKey?'S':'');
-  // Try both shift variants
-  let semi = codeMap[k] ?? codeMap[e.code] ?? codeMap[e.code+'S'];
-  if (semi !== undefined) {
-    deactivate(semi);
-    delete codeMap[e.code]; delete codeMap[e.code+'S'];
-  }
-});
-
-// ═══════════════════════════════════════════════
-// AUTO PLAY ENGINE
-// ═══════════════════════════════════════════════
-let autoPlaying = false, autoTimer = null, autoIdx = 0, autoTokens = [];
-
-function parseSheet(text) {
-  const tokens = [];
-  let i = 0;
-  while (i < text.length) {
-    const c = text[i];
-    if (c === '[') {
-      let j = i+1, chord = [];
-      while (j < text.length && text[j] !== ']') {
-        if (text[j] !== ' ' && text[j] !== '\n') chord.push(text[j]);
-        j++;
+      if ([1,3,6,8,10].includes(i)) {
+        key.classList.add("black");
+      } else {
+        key.classList.add("white");
       }
-      if (chord.length) tokens.push({type:'chord', keys:chord});
-      i = j+1;
-    } else if (c === ' ' || c === '\n') {
-      tokens.push({type:'pause'}); i++;
-    } else if (c !== ']') {
-      tokens.push({type:'note', key:c}); i++;
-    } else { i++; }
-  }
-  return tokens;
-}
 
-function bpmDelay() { return Math.round(60000 / (parseInt(document.getElementById('tempo').value)||110)); }
+      key.addEventListener("mousedown", () => pressKey(i, key));
+      key.addEventListener("touchstart", e => {
+        e.preventDefault();
+        pressKey(i, key);
+      });
 
-function startAutoPlay() {
-  if (autoPlaying) { stopAutoPlay(); return; }
-  const text = document.getElementById('sheet').value.trim();
-  if (!text) return;
-  autoPlaying = true;
-  document.getElementById('btnPlay').textContent = '⏹ Stop';
-  document.getElementById('btnPlay').classList.add('playing');
-  autoTokens = parseSheet(text);
-  autoIdx = 0;
-  document.getElementById('sheet').style.display = 'none';
-  document.getElementById('sheetProg').style.display = 'block';
-  renderProg(text);
-  playNext();
-}
+      piano.appendChild(key);
+    }
 
-function stopAutoPlay() {
-  autoPlaying = false;
-  clearTimeout(autoTimer);
-  document.getElementById('btnPlay').textContent = '▶ Auto Play';
-  document.getElementById('btnPlay').classList.remove('playing');
-  document.getElementById('sheet').style.display = 'block';
-  document.getElementById('sheetProg').style.display = 'none';
-  [...activeSet].forEach(s => deactivate(s));
-}
+    function pressKey(index, elem) {
+      if (!elem) {
+        elem = document.querySelector(`.key[data-index="${index}"]`);
+      }
+      if (!elem) return;
 
-function playNext() {
-  if (!autoPlaying || autoIdx >= autoTokens.length) { stopAutoPlay(); return; }
-  const tok = autoTokens[autoIdx];
-  const d = bpmDelay();
-  if (tok.type === 'note') {
-    const s = VP[tok.key];
-    if (s !== undefined) { activate(s); setTimeout(() => deactivate(s), d*0.72); }
-    autoIdx++;
-    renderProg(document.getElementById('sheet').value);
-    autoTimer = setTimeout(playNext, d);
-  } else if (tok.type === 'chord') {
-    const semis = tok.keys.map(k => VP[k]).filter(s => s !== undefined);
-    semis.forEach(s => activate(s));
-    setTimeout(() => semis.forEach(s => deactivate(s)), d*0.72);
-    autoIdx++;
-    renderProg(document.getElementById('sheet').value);
-    autoTimer = setTimeout(playNext, d);
-  } else {
-    autoIdx++;
-    renderProg(document.getElementById('sheet').value);
-    autoTimer = setTimeout(playNext, d*0.45);
-  }
-}
+      playNote(frequencies[index]);
 
-function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      elem.classList.add("active", index % 2 === 0 ? "glow-white" : "glow-black");
 
-function renderProg(text) {
-  let html='', i=0, ti=0;
-  while (i < text.length) {
-    const c = text[i];
-    const cls = ti < autoIdx ? 'played-char' : ti === autoIdx ? 'current-char' : 'unplayed-char';
-    if (c==='[') {
-      let j=i+1, inner='[';
-      while (j<text.length && text[j]!==']') { inner+=text[j]; j++; }
-      inner+=']';
-      html+=`<span class="${cls}">${escH(inner)}</span>`;
-      i=j+1; ti++;
-    } else if (c===' '||c==='\n') {
-      html+=`<span class="${cls}"> </span>`; i++; ti++;
-    } else if (c!==']') {
-      html+=`<span class="${cls}">${escH(c)}</span>`; i++; ti++;
-    } else { i++; }
-  }
-  const el = document.getElementById('sheetProg');
-  el.innerHTML = html;
-  el.querySelector('.current-char')?.scrollIntoView({block:'nearest'});
-}
+      setTimeout(() => {
+        elem.classList.remove("active", "glow-white", "glow-black");
+      }, 400);
+    }
 
-document.getElementById('btnPlay').addEventListener('click', startAutoPlay);
-document.getElementById('btnClear').addEventListener('click', () => {
-  stopAutoPlay();
-  document.getElementById('sheet').value = '';
-  document.getElementById('songSelect').value = '';
-});
-document.getElementById('tempo').addEventListener('input', function(){
-  document.getElementById('tempoVal').textContent = this.value;
-});
+    // Clavier physique
+    document.addEventListener("keydown", e => {
+      if (e.repeat) return;
+      const idx = keyMap[e.key.toLowerCase()];
+      if (idx !== undefined) {
+        pressKey(idx);
+      }
+    });
 
-// ═══════════════════════════════════════════════
-// SONGS — transcribed in Virtual Piano notation
-// ═══════════════════════════════════════════════
-const SONGS = {
+    // ------------------- AUTOPLAY DEMO (style Roblox simple melody) -------------------
+    const melody = [
+      {note: 0, dur: 0.3},   // C
+      {note: 0, dur: 0.3},
+      {note: 2, dur: 0.3},   // D
+      {note: 4, dur: 0.6},   // E longue
+      {note: 4, dur: 0.3},
+      {note: 2, dur: 0.3},   // D
+      {note: 0, dur: 0.6},   // C longue
 
-// ─── INTERSTELLAR (Hans Zimmer) — main theme ─────────────────────
-// Transcribed from the iconic organ theme in Cm
-// Slow, powerful, use BPM ~55
-interstellar: `u u u u u u [eup] u u [rua] u u u u u
-[eup] [rua] [tus] [rua] [eup] [rua] [tus] u u [rua]
-u u u u u [eup] u u [tus] u u [rua] u u u u u
-[eup] u [tus] [rua] [eup] [rua] [tus] u u
-[rua] u u u u u [eup] u [tus] [rua] [eup]
-[rua] [tus] u u [yud] u u u u
-[eup] a [us] a [up] s [rua] p [uo] p [ua] o
-[ua] p [uo] p [ua] o [eup] s [rua] d
-[tus] p [rua] o [eup] s [rua] d [tus] d [us] a
-[up] s [rua] p [uo] p [ua] o
-[ep] u a u s u a u p u s u
-[ra] u p u o u p u a u o u a u p u o u f u a u o u
-[ep] u s u [ra] u d u [ts] u p u [ra] u o u
-[ep] u s u [ra] u d u [ts] u d u s u a u p u s u`,
+      {note: 0, dur: 0.3},
+      {note: 0, dur: 0.3},
+      {note: 2, dur: 0.3},
+      {note: 4, dur: 0.6},
+      {note: 4, dur: 0.3},
+      {note: 2, dur: 0.3},
+      {note: 7, dur: 0.9},   // G longue
 
-// ─── HOLLOW PURPLE / GOJO THEME (JJK) ────────────────────────────
-// "If I Am With You" – Yoshimasa Terui  
-// The haunting piano theme from Gojo's battle
-gojo: `[ute] [ute] [ute] [ute]
-[ute] [ute] r t [ute]
-[yru] [yru] [yru] [yru]
-[yru] [yru] e r [yru]
-[tip] [tip] [tip] [tip]
-[tip] [tip] r t [tip]
-[uoa] [uoa] [uoa] [uoa]
-t u i [uoa]
-[ute] r t [ute] r t [ute]
-[ute] e [ute] r t [ute]
-[yru] e r [yru] e r [yru]
-[yru] r [yru] e r [yru]
-[tip] r t [tip] r t [tip]
-[tip] t [tip] r t [tip]
-[uoa] t u [uoa] t u [uoa]
-u [uoa] t u o`,
+      {note:12, dur: 0.4}, {note:11, dur: 0.2}, // C5 → B
+      {note: 9, dur: 0.4}, {note: 7, dur: 0.4}, // A → G
+      {note: 4, dur: 1.2},                      // E longue
+    ];
 
-// ─── DERNIÈRE DANSE — Indila ─────────────────────────────────────
-// One of the most recognized French songs  
-// Key: C minor — BPM ~75
-indila: `[us] [us] [us] a s [us]
-[us] [us] a [us] [us] s a
-[uo] [uo] [uo] p o [uo]
-[uo] [uo] p [uo] [uo] o p
-[ua] [ua] [ua] s a [ua]
-[ua] [ua] s [ua] [ua] a s
-[up] [up] [up] o p [up]
-[up] [up] o [up] [up] p o
-s a s [us] a s [us]
-a s a [uo] s a [uo]
-s a s [ua] a s [ua]
-a s a [up] s a [up]
-[us] a s [wu] [us] a [eu]
-[uo] p o [wu] [uo] p [eu]
-[ua] s a [wu] [ua] s [eu]
-[up] o p [wu] [up] o [eu]`,
+    let autoplayInterval = null;
 
-// ─── MEGALOVANIA — Undertale ──────────────────────────────────────
-megalovania: `[qe] [qe] u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] r
-[wt] [wt] u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] i
-[qe] [qe] u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] e
-t t u r [et] [qe] t [qe] [qw] [q1] 1 u r [et] [qe] t [qe] w`,
+    function startAutoplay() {
+      stopAutoplay();
+      let i = 0;
+      autoplayInterval = setInterval(() => {
+        if (i >= melody.length) {
+          i = 0; // boucle
+        }
+        const {note, dur} = melody[i];
+        pressKey(note);
 
-// ─── JOYEUX ANNIVERSAIRE ─────────────────────────────────────────
-happybday: `t t u t p o  t t u t [ps] [po]  t t [ut] r o p  [pe] [pe] [uo] p o`,
+        i++;
+      }, 300); // ≈ tempo 200 bpm
+    }
 
-// ─── TWINKLE TWINKLE ─────────────────────────────────────────────
-twinkle: `u u p p o o p  i i o o [pi] [pi] p  u u i i o o [pi] [pi] i  p p o o i i o`,
-};
+    function stopAutoplay() {
+      if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+        autoplayInterval = null;
+      }
+    }
 
-document.getElementById('songSelect').addEventListener('change', function(){
-  if (!this.value) return;
-  stopAutoPlay();
-  // Set recommended BPM
-  const bpms = {interstellar:50, gojo:68, indila:75, megalovania:132, happybday:90, twinkle:88};
-  const bpm = bpms[this.value] || 100;
-  document.getElementById('tempo').value = bpm;
-  document.getElementById('tempoVal').textContent = bpm;
-  document.getElementById('sheet').value = SONGS[this.value] || '';
-  this.value = '';
-});
+    document.getElementById("playBtn").onclick = startAutoplay;
+    document.getElementById("stopBtn").onclick = stopAutoplay;
 
-// ═══════════════════════════════════════════════
-// VISUALIZER
-// ═══════════════════════════════════════════════
-const canvas = document.getElementById('viz');
-const vc = canvas.getContext('2d');
-const N = analyser.frequencyBinCount;
-const tBuf = new Uint8Array(N), fBuf = new Uint8Array(N);
-let vizHue = 240;
-
-function drawViz(){
-  requestAnimationFrame(drawViz);
-  analyser.getByteTimeDomainData(tBuf);
-  analyser.getByteFrequencyData(fBuf);
-  vizHue += (glowHue - vizHue) * 0.06;
-  vc.clearRect(0,0,canvas.width,canvas.height);
-  // Freq bars
-  const bw = canvas.width/90;
-  for(let i=0;i<90;i++){
-    const v=fBuf[i]/255; if(v<0.04) continue;
-    const bh=v*canvas.height*.7;
-    vc.fillStyle=`hsla(${vizHue+i*2},100%,60%,${v*.3})`;
-    vc.fillRect(i*bw,canvas.height-bh,bw-1,bh);
-  }
-  // Waveform
-  const g = vc.createLinearGradient(0,0,canvas.width,0);
-  g.addColorStop(0,hsl(vizHue-25));
-  g.addColorStop(0.5,hsl(vizHue,100,75));
-  g.addColorStop(1,hsl(vizHue+25));
-  vc.beginPath(); vc.strokeStyle=g; vc.lineWidth=1.8;
-  vc.shadowColor=hsl(vizHue,100,60); vc.shadowBlur=7;
-  const sl=canvas.width/N; let x=0;
-  for(let i=0;i<N;i++){
-    const y=tBuf[i]/128*canvas.height/2;
-    i===0?vc.moveTo(x,y):vc.lineTo(x,y); x+=sl;
-  }
-  vc.stroke(); vc.shadowBlur=0;
-}
-
-buildPiano();
-drawViz();
-</script>
+    // Option : démarrer auto au chargement (décommente si tu veux)
+    // startAutoplay();
+  </script>
 </body>
 </html>
